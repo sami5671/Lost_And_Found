@@ -1,0 +1,42 @@
+----------- Authentication Schema model -------------
+- fullName 
+- email 
+- primaryNumber
+- alternativeNumber
+- alternativeEmail
+- password
+- occupation
+- gender
+- DOB
+- address
+- avatar
+- role
+- providerId
+- provider
+- timestamps
+
+
+----------- Plant Schema model -------------
+- name
+- description
+- previousPrice 
+- newPrice 
+- stocks
+
+- category (radio button)--> indoor and outdoor
+- color (text)
+- plantType (select option)
+- material  (radio button) --> organic and nonOrganic
+
+- images  {
+        publicId: {
+          type: String,
+          required: true,
+        },
+        url: {
+          type: String,
+          required: true,
+        },
+},
+
+these should be followed

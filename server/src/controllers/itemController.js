@@ -1,0 +1,590 @@
+const Item = require("../models/items");
+const User = require("../models/users");
+const { uploadToCloudinary } = require("../helpers/cloudinaryHelper");
+const { apiResponse } = require("../helpers");
+const { triggerAIMatching } = require("../helpers/aiMatcher");
+
+// Helper to stream upload files
+const uploadItemImages = async (files) => {
+  const urls = [];
+  if (!files || files.length === 0) return urls;
+  for (const file of files) {
+    const url = await uploadToCloudinary(file.buffer, file.originalname, "Items");
+    urls.push(url);
+  }
+  return urls;
+};
+
+const reportLostItem = async (req, res, next) => {
+  try {
+    const { title, category, description, locationLost, dateLost, contactInfo } = req.body;
+    
+    // Auth token info is stored in req.decoded
+    const reportedBy = req.decoded && req.decoded.id;
+
+    if (!reportedBy) {
+      return apiResponse(res, 401, false, "Unauthorized! User session not found.");
+    }
+
+    if (!title || !category || !description || !locationLost || !dateLost) {
+      return apiResponse(res, 400, false, "All required fields (title, category, description, location, date) must be filled!");
+    }
+
+    // req.files is populated by multer array middleware
+    const files = req.files || [];
+    const images = await uploadItemImages(files);
+
+    const item = new Item({
+      title,
+      category,
+      description,
+      locationLost,
+      dateLost: new Date(dateLost),
+      contactInfo,
+      images,
+      reportedBy,
+      type: "lost",
+      status: "reported",
+    });
+
+    await item.save();
+    triggerAIMatching(item).catch(err => console.error("AI Match trigger error:", err));
+
+    return apiResponse(res, 201, true, "Item reported successfully!", item);
+  } catch (error) {
+    next(error);
+  }
+};
+
+const getMyStats = async (req, res, next) => {
+  try {
+    const userId = req.decoded && req.decoded.id;
+    if (!userId) {
+      return apiResponse(res, 401, false, "Unauthorized!");
+    }
+
+    const lostCount = await Item.countDocuments({ reportedBy: userId, type: "lost" });
+    const matchCount = await Item.countDocuments({ reportedBy: userId, status: "matched" });
+    const resolvedCount = await Item.countDocuments({ reportedBy: userId, status: "resolved" });
+
+    const total = lostCount + resolvedCount;
+    const successRate = total > 0 ? Math.round((resolvedCount / total) * 100) : 0;
+
+    return apiResponse(res, 200, true, "Stats fetched successfully!", {
+      lostCount,
+      matchCount,
+      notificationsCount: 0,
+      resolvedCount,
+      successRate,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const getMyItems = async (req, res, next) => {
+  try {
+    const userId = req.decoded && req.decoded.id;
+    if (!userId) {
+      return apiResponse(res, 401, false, "Unauthorized!");
+    }
+
+    const items = await Item.find({ reportedBy: userId }).sort({ createdAt: -1 });
+    return apiResponse(res, 200, true, "Items fetched successfully!", items);
+  } catch (error) {
+    next(error);
+  }
+};
+
+const reportFoundItem = async (req, res, next) => {
+  try {
+    const { title, category, description, locationFound, dateFound, contactInfo } = req.body;
+    const reportedBy = req.decoded && req.decoded.id;
+
+    if (!reportedBy) {
+      return apiResponse(res, 401, false, "Unauthorized! User session not found.");
+    }
+
+    if (!title || !category || !description || !locationFound || !dateFound) {
+      return apiResponse(res, 400, false, "All required fields (title, category, description, location, date) must be filled!");
+    }
+
+    const files = req.files || [];
+    const images = await uploadItemImages(files);
+
+    const item = new Item({
+      title,
+      category,
+      description,
+      locationLost: locationFound,
+      dateLost: new Date(dateFound),
+      contactInfo,
+      images,
+      reportedBy,
+      type: "found",
+      status: "reported",
+    });
+
+    await item.save();
+    triggerAIMatching(item).catch(err => console.error("AI Match trigger error:", err));
+
+    return apiResponse(res, 201, true, "Found item reported successfully!", item);
+  } catch (error) {
+    next(error);
+  }
+};
+
+const getAllItems = async (req, res, next) => {
+  try {
+    const items = await Item.find().sort({ createdAt: -1 });
+    return apiResponse(res, 200, true, "All items fetched successfully!", items);
+  } catch (error) {
+    next(error);
+  }
+};
+
+const getAdminStats = async (req, res, next) => {
+  try {
+    const totalLostItems = await Item.countDocuments({ type: "lost" });
+    const totalFoundItems = await Item.countDocuments({ type: "found" });
+    const totalMatches = await Item.countDocuments({ status: "matched" });
+    const itemsRecovered = await Item.countDocuments({ status: "resolved" });
+    const activeUsers = await User.countDocuments();
+    const totalItems = totalLostItems + totalFoundItems;
+
+    const successRate = totalItems > 0 ? Math.round((itemsRecovered / totalItems) * 100) : 0;
+
+    // Fetch the 5 most recent users and 5 most recent items to synthesize logs
+    const recentUsers = await User.find({}).sort({ createdAt: -1 }).limit(5);
+    const recentItems = await Item.find({}).sort({ updatedAt: -1 }).limit(5);
+
+    const logs = [];
+
+    recentUsers.forEach(user => {
+      logs.push({
+        id: `user-${user._id}-${user.createdAt.getTime()}`,
+        action: 'User registered',
+        details: `${user.fullName || user.name} signed up`,
+        time: user.createdAt.toISOString(),
+        type: 'info'
+      });
+    });
+
+    recentItems.forEach(item => {
+      let action = item.type === 'lost' ? 'Lost Item reported' : 'Found Item reported';
+      let details = `'${item.title}' reported in ${item.locationLost}`;
+      let logType = 'info';
+
+      if (item.status === 'resolved') {
+        action = 'Handover Completed';
+        details = `'${item.title}' successfully recovered`;
+        logType = 'success';
+      } else if (item.status === 'matched') {
+        action = 'AI Match identified';
+        details = `'${item.title}' matched automatically`;
+        logType = 'success';
+      }
+
+      logs.push({
+        id: `item-${item._id}-${item.updatedAt.getTime()}`,
+        action,
+        details,
+        time: item.updatedAt.toISOString(),
+        type: logType
+      });
+    });
+
+    // Sort combined logs by time descending and take top 5
+    const recentLogs = logs
+      .sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime())
+      .slice(0, 5);
+
+    return apiResponse(res, 200, true, "Admin stats fetched successfully!", {
+      totalLostItems,
+      totalFoundItems,
+      totalMatches,
+      itemsRecovered,
+      activeUsers,
+      successRate,
+      recentLogs,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const getMatches = async (req, res, next) => {
+  try {
+    const Match = require("../models/matches");
+    const userId = req.decoded && req.decoded.id;
+    const role = req.decoded && req.decoded.role;
+
+    let matches = await Match.find({})
+      .populate("lostItemId")
+      .populate("foundItemId")
+      .sort({ createdAt: -1 });
+
+    if (role !== "admin") {
+      // Filter matches to only include the student's items
+      matches = matches.filter(m => {
+        const lostReportedBy = m.lostItemId && m.lostItemId.reportedBy && m.lostItemId.reportedBy.toString();
+        const foundReportedBy = m.foundItemId && m.foundItemId.reportedBy && m.foundItemId.reportedBy.toString();
+        return lostReportedBy === userId || foundReportedBy === userId;
+      });
+    }
+
+    return apiResponse(res, 200, true, "Matches retrieved successfully", { matches });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const approveMatch = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const Match = require("../models/matches");
+    
+    const match = await Match.findById(id);
+    if (!match) {
+      return apiResponse(res, 404, false, "Match not found!");
+    }
+
+    match.status = "verified";
+    await match.save();
+
+    await Item.updateMany(
+      { _id: { $in: [match.lostItemId, match.foundItemId] } },
+      { status: "resolved" }
+    );
+
+    return apiResponse(res, 200, true, "Match successfully verified and items resolved!", match);
+  } catch (error) {
+    next(error);
+  }
+};
+
+const dismissMatch = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const Match = require("../models/matches");
+
+    const match = await Match.findById(id);
+    if (!match) {
+      return apiResponse(res, 404, false, "Match not found!");
+    }
+
+    match.status = "dismissed";
+    await match.save();
+
+    const items = [match.lostItemId, match.foundItemId];
+    for (const itemId of items) {
+      const activeMatchesCount = await Match.countDocuments({
+        _id: { $ne: match._id },
+        $or: [{ lostItemId: itemId }, { foundItemId: itemId }],
+        status: { $in: ["pending", "verified"] }
+      });
+      
+      if (activeMatchesCount === 0) {
+        await Item.findByIdAndUpdate(itemId, { status: "reported" });
+      }
+    }
+
+    return apiResponse(res, 200, true, "Match successfully dismissed!", match);
+  } catch (error) {
+    next(error);
+  }
+};
+
+const verifyOwner = async (req, res, next) => {
+  try {
+    const { id } = req.params; // found item ID
+    const { lostItemId, score } = req.body; // Optional manual override from frontend
+    const axios = require("axios");
+    const Match = require("../models/matches");
+    const { sendOwnerNotification } = require("../helpers/emailService");
+
+    // 1. Find found item
+    const foundItem = await Item.findById(id);
+    if (!foundItem) {
+      return apiResponse(res, 404, false, "Found item not found!");
+    }
+
+    if (foundItem.type !== "found") {
+      return apiResponse(res, 400, false, "This action is only applicable to found items!");
+    }
+
+    let matchingLostItemId = lostItemId;
+    let finalScore = score;
+
+    if (!matchingLostItemId) {
+      // 2. Get candidates (all lost items with status reported/matched)
+      const candidates = await Item.find({
+        type: "lost",
+        status: { $in: ["reported", "matched"] }
+      });
+
+      if (candidates.length === 0) {
+        return apiResponse(res, 404, false, "No lost item candidates in database to compare against!");
+      }
+
+      // 3. Query AI Service to score matches
+      const aiServiceURL = process.env.AI_SERVICE_URL || "http://localhost:5000";
+      const payload = {
+        target_item: {
+          id: foundItem._id.toString(),
+          title: foundItem.title,
+          description: foundItem.description,
+          category: foundItem.category,
+          images: foundItem.images || [],
+          location: foundItem.locationLost,
+          date: foundItem.dateLost,
+        },
+        candidate_items: candidates.map(c => ({
+          id: c._id.toString(),
+          title: c.title,
+          description: c.description,
+          category: c.category,
+          images: c.images || [],
+          location: c.locationLost,
+          date: c.dateLost,
+        })),
+      };
+
+      let matches = [];
+      try {
+        const aiResponse = await axios.post(`${aiServiceURL}/match`, payload);
+        if (aiResponse.data && aiResponse.data.status) {
+          matches = aiResponse.data.matches;
+        }
+      } catch (err) {
+        console.error("FastAPI AI matching request failed during verifyOwner:", err.message);
+        console.log("Using backend word overlap fallback matching...");
+        matches = candidates.map(c => {
+          const title1 = foundItem.title.toLowerCase();
+          const title2 = c.title.toLowerCase();
+          const words1 = new Set(title1.split(" "));
+          const words2 = new Set(title2.split(" "));
+          const intersection = [...words1].filter(x => words2.has(x));
+          const scoreVal = intersection.length / Math.max(words1.size, words2.size);
+          return { candidate_id: c._id.toString(), score: scoreVal };
+        }).sort((a, b) => b.score - a.score);
+      }
+
+      // 4. Select best candidate (similarity must be >= 0.80)
+      const bestMatch = matches[0];
+      if (!bestMatch || bestMatch.score < 0.80) {
+        return apiResponse(res, 404, false, "AI could not identify a highly confident matching owner (similarity score below 80%).");
+      }
+
+      matchingLostItemId = bestMatch.candidate_id;
+      finalScore = bestMatch.score;
+    }
+
+    if (finalScore === undefined || finalScore === null) {
+      finalScore = 1.0;
+    }
+
+    // 5. Retrieve matching lost item and owner
+    const matchingLostItem = await Item.findById(matchingLostItemId).populate("reportedBy");
+    if (!matchingLostItem) {
+      return apiResponse(res, 404, false, "Matching lost item record not found in database!");
+    }
+
+    const owner = matchingLostItem.reportedBy;
+    if (!owner) {
+      return apiResponse(res, 404, false, "Owner user account not found for this matching lost item!");
+    }
+
+    // 6. Save or update Match suggestion
+    let matchEntry = await Match.findOne({
+      lostItemId: matchingLostItemId,
+      foundItemId: foundItem._id
+    });
+
+    if (!matchEntry) {
+      matchEntry = new Match({
+        lostItemId: matchingLostItemId,
+        foundItemId: foundItem._id,
+        similarityScore: finalScore,
+        status: "verified"
+      });
+    } else {
+      matchEntry.status = "verified";
+      matchEntry.similarityScore = finalScore;
+    }
+    await matchEntry.save();
+
+    // 7. Resolve item statuses
+    foundItem.status = "resolved";
+    await foundItem.save();
+    
+    matchingLostItem.status = "resolved";
+    await matchingLostItem.save();
+
+    // 8. Dispatch Email Notification
+    const ownerEmail = owner.email;
+    const ownerName = owner.fullName || owner.name || "DIU Student";
+    const emailSent = await sendOwnerNotification(ownerEmail, ownerName, matchingLostItem.title, foundItem.title);
+
+    return apiResponse(res, 200, true, "AI successfully matched owner and notification dispatched!", {
+      owner: {
+        name: ownerName,
+        email: ownerEmail,
+      },
+      matchedItemTitle: matchingLostItem.title,
+      score: finalScore,
+      emailSent
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const checkOwnerMatch = async (req, res, next) => {
+  try {
+    const { id } = req.params; // found item ID
+    const axios = require("axios");
+    const Item = require("../models/items");
+
+    // 1. Find found item
+    const foundItem = await Item.findById(id);
+    if (!foundItem) {
+      return apiResponse(res, 404, false, "Found item not found!");
+    }
+
+    if (foundItem.type !== "found") {
+      return apiResponse(res, 400, false, "This action is only applicable to found items!");
+    }
+
+    // 2. Get candidates (all lost items with status reported/matched)
+    const candidates = await Item.find({
+      type: "lost",
+      status: { $in: ["reported", "matched"] }
+    });
+
+    if (candidates.length === 0) {
+      return apiResponse(res, 404, false, "No lost item candidates in database to compare against!");
+    }
+
+    // 3. Query AI Service to score matches
+    const aiServiceURL = process.env.AI_SERVICE_URL || "http://localhost:5000";
+    const payload = {
+      target_item: {
+        id: foundItem._id.toString(),
+        title: foundItem.title,
+        description: foundItem.description,
+        category: foundItem.category,
+        images: foundItem.images || [],
+        location: foundItem.locationLost,
+        date: foundItem.dateLost,
+      },
+      candidate_items: candidates.map(c => ({
+        id: c._id.toString(),
+        title: c.title,
+        description: c.description,
+        category: c.category,
+        images: c.images || [],
+        location: c.locationLost,
+        date: c.dateLost,
+      })),
+    };
+
+    let matches = [];
+    try {
+      const aiResponse = await axios.post(`${aiServiceURL}/match`, payload);
+      if (aiResponse.data && aiResponse.data.status) {
+        matches = aiResponse.data.matches;
+      }
+    } catch (err) {
+      console.error("FastAPI AI matching request failed during checkOwnerMatch:", err.message);
+      console.log("Using backend word overlap fallback matching...");
+      matches = candidates.map(c => {
+        const title1 = foundItem.title.toLowerCase();
+        const title2 = c.title.toLowerCase();
+        const words1 = new Set(title1.split(" "));
+        const words2 = new Set(title2.split(" "));
+        const intersection = [...words1].filter(x => words2.has(x));
+        const score = intersection.length / Math.max(words1.size, words2.size);
+        return { candidate_id: c._id.toString(), score };
+      }).sort((a, b) => b.score - a.score);
+    }
+
+    // Select best candidate
+    const bestMatch = matches[0];
+    if (!bestMatch) {
+      return apiResponse(res, 404, false, "No matching candidates found.");
+    }
+
+    const matchingLostItemId = bestMatch.candidate_id;
+    const matchingLostItem = await Item.findById(matchingLostItemId).populate("reportedBy");
+    if (!matchingLostItem) {
+      return apiResponse(res, 404, false, "Matching lost item record not found in database!");
+    }
+
+    const owner = matchingLostItem.reportedBy;
+    const ownerName = owner ? (owner.fullName || owner.name || "DIU Student") : "Unknown";
+    const ownerEmail = owner ? owner.email : "Unknown";
+
+    return apiResponse(res, 200, true, "AI match preview retrieved successfully", {
+      foundItem: {
+        id: foundItem._id,
+        title: foundItem.title,
+        description: foundItem.description,
+        images: foundItem.images,
+        location: foundItem.locationLost || "Unknown",
+        date: foundItem.dateLost || foundItem.createdAt
+      },
+      matchedItem: {
+        id: matchingLostItem._id,
+        title: matchingLostItem.title,
+        description: matchingLostItem.description,
+        images: matchingLostItem.images,
+        location: matchingLostItem.locationLost || "Unknown",
+        date: matchingLostItem.dateLost || matchingLostItem.createdAt,
+        owner: {
+          name: ownerName,
+          email: ownerEmail
+        }
+      },
+      score: bestMatch.score
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const getGlobalStats = async (req, res, next) => {
+  try {
+    const totalLostItems = await Item.countDocuments({ type: "lost" });
+    const totalFoundItems = await Item.countDocuments({ type: "found" });
+    const totalMatches = await Item.countDocuments({ status: "matched" });
+    const itemsRecovered = await Item.countDocuments({ status: "resolved" });
+    const registeredUsers = await User.countDocuments();
+
+    return apiResponse(res, 200, true, "Global stats retrieved successfully!", {
+      totalLostItems,
+      totalFoundItems,
+      totalMatches,
+      itemsRecovered,
+      registeredUsers,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+module.exports = {
+  reportLostItem,
+  getMyStats,
+  getMyItems,
+  reportFoundItem,
+  getAllItems,
+  getAdminStats,
+  getMatches,
+  approveMatch,
+  dismissMatch,
+  verifyOwner,
+  checkOwnerMatch,
+  getGlobalStats,
+};
+
