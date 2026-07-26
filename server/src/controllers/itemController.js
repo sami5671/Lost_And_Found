@@ -491,7 +491,12 @@ const checkOwnerMatch = async (req, res, next) => {
 
     let matches = [];
     try {
-      const aiResponse = await axios.post(`${aiServiceURL}/match`, payload);
+      const aiResponse = await axios.post(`${aiServiceURL}/match`, payload, {
+        headers: {
+          "ngrok-skip-browser-warning": "true",
+          "User-Agent": "LostAndFoundServer"
+        }
+      });
       if (aiResponse.data && aiResponse.data.status) {
         matches = aiResponse.data.matches;
       }

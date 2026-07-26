@@ -155,8 +155,9 @@ cython_debug/
 Thumbs.db
 
 # Model weights / Large binary files
-yolov8n.pt
+# yolov8n.pt
 *.pt
 *.pth
 *.onnx
 *.bin
+!yolov8n.pt

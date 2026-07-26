@@ -39,7 +39,12 @@ const triggerAIMatching = async (newItem) => {
     };
 
     console.log(`Sending matching request to AI service: ${aiServiceURL}/match`);
-    const response = await axios.post(`${aiServiceURL}/match`, payload);
+    const response = await axios.post(`${aiServiceURL}/match`, payload, {
+      headers: {
+        "ngrok-skip-browser-warning": "true",
+        "User-Agent": "LostAndFoundServer"
+      }
+    });
 
     if (response.data && response.data.status && response.data.matches) {
       const matches = response.data.matches;

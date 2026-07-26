@@ -1,19 +1,61 @@
-1. Install Dependencies
-Open your terminal in the aiService directory and install the required Python packages from the updated requirements.txt:
+# Lost & Found Local AI Service & Static Ngrok Tunnel Setup
 
-bash
+This directory contains the hybrid AI matching engine (combining DINOv2 visual embeddings, sentence-transformers text embeddings, EasyOCR, YOLO object detection, and color/date/location metadata scoring) for the Daffodil Lost & Found System.
+
+---
+
+## 🚀 Quick Start (Complete Process)
+
+### 1. Install Dependencies
+Open terminal in the `aiService` directory and install Python dependencies:
+```bash
 pip install -r requirements.txt
+```
 
-2. Start the FastAPI Server
-Run the main application script:
+### 2. Download Pre-trained Models
+Run the pre-downloader script to cache DINOv2, all-MiniLM-L6-v2, and EasyOCR models locally:
+```bash
+python download_models.py
+```
 
-bash
-python app.py
-Alternatively, you can run it directly using Uvicorn:
+### 3. Start AI Service & Ngrok Tunnel
 
-bash
-uvicorn app:app --host 0.0.0.0 --port 5000 --reload
-The service will start running at http://localhost:5000. You can visit the interactive API documentation (Swagger UI) at http://localhost:5000/docs in your browser.
+#### Option A: One-Command Launcher (Python)
+```bash
+python start_all.py
+```
 
+#### Option B: Separate Terminals
 
-in the admin pannel found items page if i click verify owner then will show me the ai similarity percentage and data in a modal, do this feature according to my client, server, aiService code sync
+1. **Terminal 1 - FastAPI AI Server:**
+   ```bash
+   python app.py
+   ```
+   *Runs locally on `http://localhost:5000` (Interactive Docs: `http://localhost:5000/docs`).*
+
+2. **Terminal 2 - Static Ngrok Tunnel:**
+   ```bash
+   ngrok http --url=requisite-frolic-perkiness.ngrok-free.dev 5000
+   ```
+   *(or double click `start_tunnel.bat` on Windows)*
+
+---
+
+## ⚙️ Server Configuration (`server/.env`)
+
+Ensure the Node.js backend `.env` contains the static ngrok URL:
+```env
+AI_SERVICE_URL=https://requisite-frolic-perkiness.ngrok-free.dev
+```
+
+The Node.js backend handles Ngrok free tier browser warning pages automatically by sending the `ngrok-skip-browser-warning: true` HTTP header.
+
+---
+
+## 🔍 Features & Admin Verification
+
+1. **Automatic Background AI Matching**:
+   When a user reports a Lost or Found item, the backend automatically triggers `triggerAIMatching()`, which calls `/match` on the AI service to calculate multi-modal similarity scores across candidates and saves match suggestions (score ≥ 0.80).
+
+2. **Admin Panel "Verify Owner" Modal**:
+   In the Admin Panel under **Found Items**, clicking **Verify Owner** hits `/items/found/:id/check-match`, which queries the local AI service over the Ngrok tunnel, retrieves the top matching lost item + owner details, and displays the similarity score and verification modal.
