@@ -4,6 +4,12 @@ import subprocess
 import time
 import shutil
 
+# Ensure UTF-8 output encoding for Windows terminals
+if hasattr(sys.stdout, 'reconfigure'):
+    sys.stdout.reconfigure(encoding='utf-8')
+if hasattr(sys.stderr, 'reconfigure'):
+    sys.stderr.reconfigure(encoding='utf-8')
+
 try:
     from dotenv import load_dotenv
     load_dotenv()
@@ -38,31 +44,28 @@ def main():
     # Give FastAPI a couple of seconds to boot up
     time.sleep(3)
     
-    if ngrok_path:
-        print(f"\n[3/3] Starting Ngrok Tunnel -> https://{static_domain}...")
-        try:
+    ngrok_process = None
+    try:
+        if ngrok_path:
+            print(f"\n[3/3] Starting Ngrok Tunnel -> https://{static_domain}...")
             ngrok_process = subprocess.Popen(["ngrok", "http", "--url=" + static_domain, port])
-            print(f"\n✅ Local AI Service and Static Ngrok Tunnel are running!")
+            print(f"\n[OK] Local AI Service and Static Ngrok Tunnel are running!")
             print(f"   Local URL:  http://localhost:{port}")
             print(f"   Ngrok URL:  https://{static_domain}\n")
-            
             ngrok_process.wait()
-        except KeyboardInterrupt:
-            print("\nStopping Ngrok tunnel and FastAPI service...")
-        except Exception as e:
-            print(f"\nError running ngrok command: {e}")
-            print(f"You can manually run: ngrok http --url={static_domain} {port}")
-    else:
-        print("\n[3/3] ⚠️ Ngrok CLI was not detected in PATH.")
-        print(f"   To expose the local AI service via static Ngrok tunnel, install Ngrok and run:")
-        print(f"   ngrok http --url={static_domain} {port}\n")
-        print(f"   FastAPI AI Service is running locally on http://localhost:{port}")
-        
-    try:
-        fastapi_process.wait()
+        else:
+            print("\n[3/3] [WARNING] Ngrok CLI was not detected in PATH.")
+            print(f"   To expose the local AI service via static Ngrok tunnel, install Ngrok and run:")
+            print(f"   ngrok http --url={static_domain} {port}\n")
+            print(f"   FastAPI AI Service is running locally on http://localhost:{port}")
+            fastapi_process.wait()
     except KeyboardInterrupt:
-        print("\nStopping FastAPI server...")
-        fastapi_process.terminate()
+        print("\nStopping AI Service and Ngrok Tunnel...")
+    finally:
+        if ngrok_process and ngrok_process.poll() is None:
+            ngrok_process.terminate()
+        if fastapi_process.poll() is None:
+            fastapi_process.terminate()
 
 if __name__ == "__main__":
     main()
