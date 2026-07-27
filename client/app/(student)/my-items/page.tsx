@@ -21,6 +21,7 @@ export default function MyItemsPage() {
 
   const sidebarItems = [
     { label: 'Dashboard', href: '/dashboard', icon: <BarChart3 className="w-5 h-5" /> },
+    { label: 'Report Now', href: '/report', icon: <Plus className="w-5 h-5" /> },
     { label: 'My Items', href: '/my-items', icon: <Heart className="w-5 h-5" /> },
     { label: 'Notifications', href: '/notifications', icon: <Bell className="w-5 h-5" /> },
     { label: 'Matches', href: '/matches', icon: <CheckCircle2 className="w-5 h-5" /> },
@@ -45,7 +46,7 @@ export default function MyItemsPage() {
             id: item._id,
             title: item.title,
             description: item.description,
-            category: (item.category?.toLowerCase() || 'other') as ItemCategory,
+            category: (item.category || 'Others') as ItemCategory,
             status: (item.status === 'reported' ? (item.type === 'lost' ? 'lost' : 'found') : item.status) as ItemStatus,
             imageUrl: item.images?.[0] || 'https://images.unsplash.com/photo-1540553016722-983e48a2cd10?w=800&auto=format&fit=crop&q=60',
             reportedDate: item.dateLost ? new Date(item.dateLost).toLocaleDateString() : new Date(item.createdAt).toLocaleDateString(),

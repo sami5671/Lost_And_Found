@@ -8,8 +8,9 @@ import { DashboardLayout } from '@/components/dashboard-layout'
 import { GlassCard } from '@/components/glass-card'
 import { GradientButton } from '@/components/gradient-button'
 import { FormInput } from '@/components/form-input'
-import { BarChart3, Users, Package, AlertCircle, CheckCircle2, TrendingUp, X, Upload } from 'lucide-react'
+import { BarChart3, Users, Package, AlertCircle, CheckCircle2, TrendingUp, X, Upload, Mic, MicOff, Sparkles } from 'lucide-react'
 import { handleReportFoundItem } from '@/actions/admin/item-actions'
+import { CATEGORY_OPTIONS } from '@/config/categories'
 
 export default function AdminAddFoundItemPage() {
   const router = useRouter()
@@ -31,6 +32,78 @@ export default function AdminAddFoundItemPage() {
     dateFound: '',
     contactInfo: '',
   })
+
+  const [isListening, setIsListening] = useState(false)
+  const [recognition, setRecognition] = useState<any>(null)
+
+  const toggleListening = () => {
+    if (isListening) {
+      recognition?.stop()
+      setIsListening(false)
+      return
+    }
+
+    const SpeechRecognition =
+      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
+
+    if (!SpeechRecognition) {
+      alert('Speech Recognition is not supported in your browser. Please try Chrome, Edge, or Safari.')
+      return
+    }
+
+    try {
+      const rec = new SpeechRecognition()
+      rec.continuous = true
+      rec.interimResults = true
+      rec.lang = 'en-US'
+
+      // Capture initial text snapshot before dictation begins
+      const initialText = formData.description ? formData.description.trim() : ''
+
+      rec.onstart = () => {
+        setIsListening(true)
+      }
+
+      rec.onresult = (event: any) => {
+        let finalTranscript = ''
+        let interimTranscript = ''
+
+        for (let i = 0; i < event.results.length; i++) {
+          const result = event.results[i]
+          if (result.isFinal) {
+            finalTranscript += result[0].transcript + ' '
+          } else {
+            interimTranscript += result[0].transcript
+          }
+        }
+
+        const speechText = (finalTranscript + interimTranscript).trim()
+        const updatedDescription = initialText
+          ? `${initialText} ${speechText}`
+          : speechText
+
+        setFormData((prev) => ({
+          ...prev,
+          description: updatedDescription,
+        }))
+      }
+
+      rec.onerror = (event: any) => {
+        console.error('Speech recognition error:', event.error)
+        setIsListening(false)
+      }
+
+      rec.onend = () => {
+        setIsListening(false)
+      }
+
+      rec.start()
+      setRecognition(rec)
+    } catch (err) {
+      console.error('Error starting speech recognition:', err)
+      setIsListening(false)
+    }
+  }
   const [imageFiles, setImageFiles] = useState<File[]>([])
   const [imagePreviews, setImagePreviews] = useState<string[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -138,12 +211,11 @@ export default function AdminAddFoundItemPage() {
                       className="w-full px-4 py-2 rounded-lg border border-border bg-background text-foreground transition-all focus:outline-none focus:border-primary/60 focus:ring-2 focus:ring-primary/20"
                     >
                       <option value="" className="bg-background text-foreground">Select Category</option>
-                      <option value="Electronics" className="bg-background text-foreground">Electronics</option>
-                      <option value="Documents" className="bg-background text-foreground">Documents & Cards</option>
-                      <option value="Books" className="bg-background text-foreground">Books & Stationery</option>
-                      <option value="Bags" className="bg-background text-foreground">Bags & Wallets</option>
-                      <option value="Clothing" className="bg-background text-foreground">Clothing & Accessories</option>
-                      <option value="Others" className="bg-background text-foreground">Others</option>
+                      {CATEGORY_OPTIONS.map((cat) => (
+                        <option key={cat.value} value={cat.value} className="bg-background text-foreground">
+                          {cat.label}
+                        </option>
+                      ))}
                     </select>
                   </div>
 
@@ -151,15 +223,53 @@ export default function AdminAddFoundItemPage() {
                     <label className="block text-sm font-medium text-foreground">
                       Description
                     </label>
-                    <textarea
-                      name="description"
-                      rows={4}
-                      placeholder="Include item brand, unique tags, colors, content inside, or details..."
-                      value={formData.description}
-                      onChange={handleChange}
-                      required
-                      className="w-full px-4 py-2 rounded-lg border border-border bg-background text-foreground placeholder-foreground/50 transition-all focus:outline-none focus:border-primary/60 focus:ring-2 focus:ring-primary/20"
-                    />
+
+                    <div className="relative">
+                      <textarea
+                        name="description"
+                        rows={4}
+                        placeholder="Include item brand, unique tags, colors, content inside, or details..."
+                        value={formData.description}
+                        onChange={handleChange}
+                        required
+                        className={`w-full px-4 py-2.5 pb-11 rounded-lg border bg-background text-foreground placeholder-foreground/50 transition-all focus:outline-none focus:ring-2 ${
+                          isListening
+                            ? 'border-red-500/60 ring-2 ring-red-500/30 bg-red-500/5'
+                            : 'border-border focus:border-primary/60 focus:ring-primary/20'
+                        }`}
+                      />
+
+                      {/* Voice to Text Button Inside Bottom-Right Corner */}
+                      <div className="absolute bottom-2.5 right-2.5 z-10 flex items-center">
+                        <button
+                          type="button"
+                          onClick={toggleListening}
+                          className={`relative inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold transition-all cursor-pointer border backdrop-blur-md shadow-sm ${
+                            isListening
+                              ? 'bg-red-500/20 text-red-400 border-red-500/50 shadow-red-500/30 animate-pulse'
+                              : 'bg-primary/10 text-primary border-primary/30 hover:bg-primary/20'
+                          }`}
+                          title={isListening ? 'Click to stop voice dictation' : 'Click to dictate description with voice'}
+                        >
+                          {isListening ? (
+                            <>
+                              <span className="relative flex h-2 w-2">
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                                <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                              </span>
+                              <MicOff className="w-3.5 h-3.5 animate-pulse text-red-400" />
+                              <span>Listening...</span>
+                            </>
+                          ) : (
+                            <>
+                              <Mic className="w-3.5 h-3.5 text-primary" />
+                              <Sparkles className="w-3 h-3 text-amber-400 animate-pulse" />
+                              <span>Voice to Text</span>
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </div>
 

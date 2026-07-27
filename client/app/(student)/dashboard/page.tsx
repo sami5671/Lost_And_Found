@@ -21,6 +21,7 @@ export default function StudentDashboard() {
   const router = useRouter()
   const sidebarItems = [
     { label: 'Dashboard', href: '/dashboard', icon: <BarChart3 className="w-5 h-5" /> },
+    { label: 'Report Now', href: '/report', icon: <Plus className="w-5 h-5" /> },
     { label: 'My Items', href: '/my-items', icon: <Heart className="w-5 h-5" /> },
     { label: 'Notifications', href: '/notifications', icon: <Bell className="w-5 h-5" /> },
     { label: 'Matches', href: '/matches', icon: <CheckCircle2 className="w-5 h-5" /> },
@@ -56,7 +57,7 @@ export default function StudentDashboard() {
             id: item._id,
             title: item.title,
             description: item.description,
-            category: (item.category?.toLowerCase() || 'other') as ItemCategory,
+            category: (item.category || 'Others') as ItemCategory,
             status: (item.status === 'reported' ? 'lost' : item.status) as ItemStatus,
             imageUrl: item.images?.[0] || 'https://images.unsplash.com/photo-1540553016722-983e48a2cd10?w=800&auto=format&fit=crop&q=60',
             reportedDate: item.dateLost ? new Date(item.dateLost).toLocaleDateString() : new Date(item.createdAt).toLocaleDateString(),
@@ -107,9 +108,17 @@ export default function StudentDashboard() {
         variants={containerVariants}
       >
         {/* Header */}
-        <motion.div variants={itemVariants}>
-          <h1 className="text-4xl font-bold text-slate-900 dark:text-white mb-2">Dashboard</h1>
-          <p className="text-slate-500 dark:text-slate-400">Track your lost items and AI-matched findings</p>
+        <motion.div variants={itemVariants} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-4xl font-bold text-slate-900 dark:text-white mb-2">Dashboard</h1>
+            <p className="text-slate-500 dark:text-slate-400">Track your lost items and AI-matched findings</p>
+          </div>
+          <Link href="/report">
+            <GradientButton className="flex items-center gap-2 px-6 py-3 cursor-pointer shadow-lg shadow-primary/20 text-base font-semibold">
+              <Plus className="w-5 h-5" />
+              <span>Report Now</span>
+            </GradientButton>
+          </Link>
         </motion.div>
 
         {/* DIU Student Profile Card */}

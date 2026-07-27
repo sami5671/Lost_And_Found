@@ -15,6 +15,7 @@ export default function StudentMatchesPage() {
 
   const sidebarItems = [
     { label: 'Dashboard', href: '/dashboard', icon: <BarChart3 className="w-5 h-5" /> },
+    { label: 'Report Now', href: '/report', icon: <Plus className="w-5 h-5" /> },
     { label: 'My Items', href: '/my-items', icon: <Heart className="w-5 h-5" /> },
     { label: 'Notifications', href: '/notifications', icon: <Bell className="w-5 h-5" /> },
     { label: 'Matches', href: '/matches', icon: <CheckCircle2 className="w-5 h-5" /> },

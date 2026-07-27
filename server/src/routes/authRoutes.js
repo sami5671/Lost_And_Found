@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const { register, login, getMe, updatePassword, getAllUsers } = require("../controllers/authController");
+const { register, login, getMe, updatePassword, getAllUsers, forgotPassword, resetPassword } = require("../controllers/authController");
 const { verifyToken } = require("../middlewares/authMiddlewares");
 const upload = require("../middlewares/uploadMiddleware");
 
@@ -15,6 +15,8 @@ router.post(
   ]),
   register
 );
+router.post("/auth/forgot-password", forgotPassword);
+router.post("/auth/reset-password", resetPassword);
 
 // Private Routes (Require Token)
 router.get("/auth/me", verifyToken, getMe);

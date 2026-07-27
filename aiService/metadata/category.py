@@ -1,10 +1,17 @@
 class CategoryMatcher:
     CATEGORY_GROUPS = {
-        "electronics": {"electronics", "gadget", "gadgets", "phone", "mobile", "laptop", "computer", "device", "headphone", "charger"},
-        "documents": {"documents", "document", "cards", "card", "id", "passport", "certificate", "license"},
-        "books": {"books", "book", "stationery", "notebook", "pen"},
-        "bags": {"bags", "bag", "wallets", "wallet", "purse", "backpack", "pouch"},
-        "clothing": {"clothing", "clothes", "wear", "jacket", "shirt", "pant", "shoe", "umbrella", "accessories", "watch"}
+        "laptop": {"laptop", "computer", "macbook", "notebook", "pc", "chromebook"},
+        "mobile": {"mobile", "phone", "smartphone", "iphone", "android", "device"},
+        "watch": {"watch", "smartwatch", "apple watch", "timepiece"},
+        "bags": {"bags", "bag", "backpack", "pouch", "luggage", "briefcase", "duffel"},
+        "id card": {"id card", "id", "cards", "card", "identity card", "student id", "passport", "license"},
+        "documents": {"documents", "document", "paper", "certificate", "file", "folder"},
+        "wallets": {"wallets", "wallet", "purse", "billfold"},
+        "books": {"books", "book", "stationery", "notebook", "textbook", "novel", "pen"},
+        "clothings": {"clothings", "clothing", "clothes", "wear", "jacket", "shirt", "pant", "shoe", "umbrella", "scarf", "coat"},
+        "headphones": {"headphones", "headphone", "headpones", "earphone", "earbuds", "airpods", "headset"},
+        "water bottle": {"water bottle", "bottle", "flask", "tumbler", "thermos", "canteen"},
+        "electronics": {"electronics", "gadget", "gadgets", "charger", "cable", "powerbank"}
     }
 
     @staticmethod

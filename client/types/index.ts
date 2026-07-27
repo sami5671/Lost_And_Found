@@ -1,5 +1,23 @@
-export type ItemStatus = 'lost' | 'found' | 'claimed' | 'returned'
-export type ItemCategory = 'electronics' | 'documents' | 'accessories' | 'clothing' | 'bags' | 'books' | 'other'
+export type ItemStatus = 'lost' | 'found' | 'claimed' | 'returned' | 'matched' | 'resolved' | 'reported' | (string & {})
+export type ItemCategory =
+  | 'laptop'
+  | 'mobile'
+  | 'watch'
+  | 'bags'
+  | 'id card'
+  | 'documents'
+  | 'wallets'
+  | 'books'
+  | 'clothings'
+  | 'clothing'
+  | 'headphones'
+  | 'water bottle'
+  | 'others'
+  | 'other'
+  | 'electronics'
+  | 'accessories'
+  | (string & {})
+
 export type MatchStatus = 'pending' | 'matched' | 'dismissed'
 
 export interface Item {

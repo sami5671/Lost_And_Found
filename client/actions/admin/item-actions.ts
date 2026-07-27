@@ -223,3 +223,55 @@ export async function handleGetGlobalStats() {
   }
 }
 
+export async function handleForgotPassword(email: string) {
+  try {
+    const res = await apiClient("/auth/forgot-password", {
+      method: "POST",
+      body: { email },
+      cache: "no-store",
+    });
+
+    if (!res?.status) {
+      return {
+        status: false,
+        error: res?.message || "Failed to request password reset OTP",
+      };
+    }
+
+    return {
+      status: true,
+      data: res.data,
+      message: res.message,
+    };
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred!";
+    return { status: false, error: errorMessage };
+  }
+}
+
+export async function handleResetPassword(email: string, otp: string, newPassword: string) {
+  try {
+    const res = await apiClient("/auth/reset-password", {
+      method: "POST",
+      body: { email, otp, newPassword },
+      cache: "no-store",
+    });
+
+    if (!res?.status) {
+      return {
+        status: false,
+        error: res?.message || "Failed to reset password",
+      };
+    }
+
+    return {
+      status: true,
+      data: res.data,
+      message: res.message,
+    };
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred!";
+    return { status: false, error: errorMessage };
+  }
+}
+

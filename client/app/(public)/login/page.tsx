@@ -163,17 +163,7 @@ export default function LoginPage() {
               </GradientButton>
             </form>
 
-             {/* Divider */}
-            <div className="my-6 flex items-center gap-3">
-              <div className="flex-1 h-px bg-border"></div>
-              <span className="text-xs text-foreground/50">or</span>
-              <div className="flex-1 h-px bg-border"></div>
-            </div>
 
-            {/* Alternative Login */}
-            <GradientButton variant="secondary" className="w-full opacity-50 cursor-not-allowed">
-              Continue with Google
-            </GradientButton>
 
             {/* Footer */}
             <div className="mt-6 text-center space-y-2">

@@ -2,6 +2,7 @@ const User = require("../models/users");
 const jwt = require("jsonwebtoken");
 const { apiResponse } = require("../helpers");
 const { uploadToCloudinary } = require("../helpers/cloudinaryHelper");
+const { sendPasswordResetOTP } = require("../helpers/emailService");
 
 // Helper to generate JWT Token
 const generateToken = (user) => {
@@ -240,10 +241,77 @@ const getAllUsers = async (req, res, next) => {
   }
 };
 
+const forgotPassword = async (req, res, next) => {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      return apiResponse(res, 400, false, "Email address is required!");
+    }
+
+    const user = await User.findOne({ email: email.toLowerCase().trim() });
+    if (!user) {
+      return apiResponse(res, 404, false, "No account found with this email address!");
+    }
+
+    // Generate 6-digit OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    user.resetOTP = otp;
+    user.resetOTPExpires = Date.now() + 15 * 60 * 1000; // 15 minutes validity
+    await user.save();
+
+    await sendPasswordResetOTP(user.email, user.fullName, otp);
+
+    return apiResponse(res, 200, true, "Password reset OTP sent to your email address!", {
+      email: user.email,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const resetPassword = async (req, res, next) => {
+  try {
+    const { email, otp, newPassword } = req.body;
+
+    if (!email || !otp || !newPassword) {
+      return apiResponse(res, 400, false, "Email, OTP code, and new password are required!");
+    }
+
+    if (newPassword.length < 6) {
+      return apiResponse(res, 400, false, "Password must be at least 6 characters long!");
+    }
+
+    const user = await User.findOne({ email: email.toLowerCase().trim() });
+    if (!user) {
+      return apiResponse(res, 404, false, "Account not found!");
+    }
+
+    if (!user.resetOTP || user.resetOTP !== otp.toString().trim()) {
+      return apiResponse(res, 400, false, "Invalid OTP verification code!");
+    }
+
+    if (user.resetOTPExpires && user.resetOTPExpires < Date.now()) {
+      return apiResponse(res, 400, false, "OTP verification code has expired! Please request a new code.");
+    }
+
+    user.password = newPassword;
+    user.resetOTP = undefined;
+    user.resetOTPExpires = undefined;
+
+    await user.save();
+
+    return apiResponse(res, 200, true, "Password reset successful! You can now log in with your new password.");
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   register,
   login,
   getMe,
   updatePassword,
   getAllUsers,
+  forgotPassword,
+  resetPassword,
 };

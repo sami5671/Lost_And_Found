@@ -18,6 +18,11 @@ export interface User {
   role: UserRole
   primaryNumber?: string
   occupation?: string
+  providerId?: string
+  avatar?: string
+  address?: string
+  idCardFront?: string
+  idCardBack?: string
 }
 
 interface AuthContextType {

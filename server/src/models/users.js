@@ -72,6 +72,13 @@ const UserSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
+    resetOTP: {
+      type: String,
+      trim: true,
+    },
+    resetOTPExpires: {
+      type: Date,
+    },
   },
   {
     timestamps: true,

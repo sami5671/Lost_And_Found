@@ -48,7 +48,7 @@ export default function AdminDashboard() {
             id: item._id,
             title: item.title,
             description: item.description,
-            category: (item.category?.toLowerCase() || 'other') as ItemCategory,
+            category: (item.category || 'Others') as ItemCategory,
             status: (item.status === 'reported' ? (item.type === 'lost' ? 'lost' : 'found') : item.status) as ItemStatus,
             imageUrl: item.images?.[0] || 'https://images.unsplash.com/photo-1540553016722-983e48a2cd10?w=800&auto=format&fit=crop&q=60',
             reportedDate: item.dateLost ? new Date(item.dateLost).toLocaleDateString() : new Date(item.createdAt).toLocaleDateString(),
