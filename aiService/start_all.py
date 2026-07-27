@@ -4,6 +4,12 @@ import subprocess
 import time
 import shutil
 
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
+
 def main():
     print("=" * 60)
     print("      DIU Lost & Found AI Service + Static Ngrok Tunnel Launcher")
@@ -11,6 +17,9 @@ def main():
     
     ai_dir = os.path.dirname(os.path.abspath(__file__))
     os.chdir(ai_dir)
+    
+    port = os.getenv("PORT", "5000")
+    static_domain = os.getenv("STATIC_NGROK_DOMAIN", "requisite-frolic-perkiness.ngrok-free.dev")
     
     # 1. Download/Verify models
     print("\n[1/3] Checking & pre-downloading AI models...")
@@ -21,10 +30,9 @@ def main():
         
     # 2. Check ngrok availability
     ngrok_path = shutil.which("ngrok")
-    static_domain = "requisite-frolic-perkiness.ngrok-free.dev"
     
     # 3. Start FastAPI service
-    print("\n[2/3] Starting FastAPI AI Service on http://localhost:5000...")
+    print(f"\n[2/3] Starting FastAPI AI Service on http://localhost:{port}...")
     fastapi_process = subprocess.Popen([sys.executable, "app.py"])
     
     # Give FastAPI a couple of seconds to boot up
@@ -33,9 +41,9 @@ def main():
     if ngrok_path:
         print(f"\n[3/3] Starting Ngrok Tunnel -> https://{static_domain}...")
         try:
-            ngrok_process = subprocess.Popen(["ngrok", "http", "--url=" + static_domain, "5000"])
+            ngrok_process = subprocess.Popen(["ngrok", "http", "--url=" + static_domain, port])
             print(f"\n✅ Local AI Service and Static Ngrok Tunnel are running!")
-            print(f"   Local URL:  http://localhost:5000")
+            print(f"   Local URL:  http://localhost:{port}")
             print(f"   Ngrok URL:  https://{static_domain}\n")
             
             ngrok_process.wait()
@@ -43,12 +51,12 @@ def main():
             print("\nStopping Ngrok tunnel and FastAPI service...")
         except Exception as e:
             print(f"\nError running ngrok command: {e}")
-            print(f"You can manually run: ngrok http --url={static_domain} 5000")
+            print(f"You can manually run: ngrok http --url={static_domain} {port}")
     else:
         print("\n[3/3] ⚠️ Ngrok CLI was not detected in PATH.")
         print(f"   To expose the local AI service via static Ngrok tunnel, install Ngrok and run:")
-        print(f"   ngrok http --url={static_domain} 5000\n")
-        print(f"   FastAPI AI Service is running locally on http://localhost:5000")
+        print(f"   ngrok http --url={static_domain} {port}\n")
+        print(f"   FastAPI AI Service is running locally on http://localhost:{port}")
         
     try:
         fastapi_process.wait()

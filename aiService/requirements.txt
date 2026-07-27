@@ -12,3 +12,4 @@ opencv-python-headless
 sentence-transformers
 ultralytics
 easyocr
+python-dotenv

@@ -84,39 +84,39 @@ export default function MyItemsPage() {
       >
         {/* Header */}
         <div>
-          <h1 className="text-4xl font-bold text-white mb-2">My Items</h1>
-          <p className="text-foreground/60">Manage all your lost and found items</p>
+          <h1 className="text-4xl font-extrabold text-slate-900 dark:text-white mb-2">My Items</h1>
+          <p className="text-slate-600 dark:text-slate-400">Manage all your lost and found items</p>
         </div>
 
         {/* Search & Filters */}
         <div className="space-y-4">
           <div className="flex flex-col md:flex-row gap-4">
             <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-foreground/40" />
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 dark:text-foreground/40" />
               <input
                 type="text"
                 placeholder="Search items..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 rounded-lg glass-dark border border-purple-500/20 focus:border-purple-500/50 focus:outline-none transition-colors"
+                className="w-full pl-10 pr-4 py-3 rounded-xl bg-white dark:bg-[#0c1a30] border border-emerald-500/30 dark:border-emerald-500/20 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 shadow-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 focus:outline-none transition-all"
               />
             </div>
-            <button className="px-4 py-3 rounded-lg glass-dark border border-purple-500/20 hover:border-purple-500/50 transition-colors flex items-center gap-2">
-              <Filter className="w-5 h-5" />
+            <button className="px-5 py-3 rounded-xl bg-white dark:bg-[#0c1a30] border border-emerald-500/30 dark:border-emerald-500/20 text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white hover:border-emerald-500/50 shadow-sm transition-all flex items-center gap-2 font-medium">
+              <Filter className="w-5 h-5 text-emerald-500 dark:text-emerald-400" />
               Filter
             </button>
           </div>
 
           {/* Status Tabs */}
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2.5">
             {statuses.map(status => (
               <button
                 key={status.id}
                 onClick={() => setSelectedStatus(status.id)}
-                className={`px-4 py-2 rounded-lg transition-all ${
+                className={`px-5 py-2.5 rounded-xl font-medium transition-all duration-300 ${
                   selectedStatus === status.id
-                    ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white'
-                    : 'glass-dark border border-purple-500/20 text-foreground/60 hover:text-foreground'
+                    ? 'bg-gradient-to-r from-emerald-600 to-teal-500 text-white shadow-lg shadow-emerald-500/25 scale-105'
+                    : 'bg-white dark:bg-[#0c1a30] border border-emerald-500/30 dark:border-emerald-500/20 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:border-emerald-500/50 hover:bg-emerald-500/10 shadow-sm'
                 }`}
               >
                 {status.label}
@@ -127,7 +127,7 @@ export default function MyItemsPage() {
 
         {loading ? (
           <div className="flex items-center justify-center py-20">
-            <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-purple-500"></div>
+            <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-emerald-500"></div>
           </div>
         ) : filteredItems.length > 0 ? (
           <motion.div

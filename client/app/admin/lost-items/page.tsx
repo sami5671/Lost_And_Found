@@ -73,66 +73,66 @@ export default function AdminLostItemsPage() {
       >
         {/* Header */}
         <div>
-          <h1 className="text-4xl font-bold text-white mb-2">Lost Items Management</h1>
-          <p className="text-foreground/60">Monitor and resolve reported lost items</p>
+          <h1 className="text-4xl font-extrabold text-slate-900 dark:text-white mb-2">Lost Items Management</h1>
+          <p className="text-slate-600 dark:text-slate-400">Monitor and resolve reported lost items</p>
         </div>
 
         {/* Search */}
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-foreground/40" />
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 dark:text-foreground/40" />
           <input
             type="text"
             placeholder="Search by title, description or location..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-3 rounded-lg glass-dark border border-purple-500/20 focus:border-purple-500/50 focus:outline-none transition-colors"
+            className="w-full pl-10 pr-4 py-3 rounded-xl bg-white dark:bg-[#0c1a30] border border-emerald-500/30 dark:border-emerald-500/20 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 shadow-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 focus:outline-none transition-all"
           />
         </div>
 
         {/* Lost Items Table */}
         {loading ? (
           <div className="flex items-center justify-center py-20">
-            <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-purple-500"></div>
+            <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-emerald-500"></div>
           </div>
         ) : (
           <GlassCard>
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b border-purple-500/20">
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-foreground/60">Item</th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-foreground/60">Category</th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-foreground/60">Location</th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-foreground/60">Date Reported</th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-foreground/60">Status</th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-foreground/60">Action</th>
+                  <tr className="border-b border-slate-200 dark:border-emerald-500/20">
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-slate-700 dark:text-slate-300">Item</th>
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-slate-700 dark:text-slate-300">Category</th>
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-slate-700 dark:text-slate-300">Location</th>
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-slate-700 dark:text-slate-300">Date Reported</th>
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-slate-700 dark:text-slate-300">Status</th>
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-slate-700 dark:text-slate-300">Action</th>
                   </tr>
                 </thead>
                 <tbody>
                   {lostItems.map((item, idx) => (
                     <motion.tr
                       key={item.id}
-                      className="border-b border-purple-500/10 hover:bg-white/5 transition-colors"
+                      className="border-b border-slate-100 dark:border-white/5 hover:bg-slate-50 dark:hover:bg-white/5 transition-colors"
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       transition={{ delay: idx * 0.1 }}
                     >
                       <td className="px-6 py-4">
                         <div className="flex flex-col">
-                          <span className="font-semibold text-sm text-white">{item.title}</span>
-                          <span className="text-xs text-foreground/40 line-clamp-1">{item.description}</span>
+                          <span className="font-semibold text-sm text-slate-900 dark:text-white">{item.title}</span>
+                          <span className="text-xs text-slate-500 dark:text-slate-400 line-clamp-1">{item.description}</span>
                         </div>
                       </td>
-                      <td className="px-6 py-4 text-sm text-foreground/60 capitalize">{item.category}</td>
-                      <td className="px-6 py-4 text-sm text-foreground/60">{item.location}</td>
-                      <td className="px-6 py-4 text-sm text-foreground/60">{item.reportedDate}</td>
+                      <td className="px-6 py-4 text-sm text-slate-700 dark:text-slate-300 capitalize">{item.category}</td>
+                      <td className="px-6 py-4 text-sm text-slate-700 dark:text-slate-300">{item.location}</td>
+                      <td className="px-6 py-4 text-sm text-slate-700 dark:text-slate-300">{item.reportedDate}</td>
                       <td className="px-6 py-4 text-sm">
-                        <span className="px-2 py-1 rounded text-xs font-medium bg-red-500/20 text-red-300 uppercase">
+                        <span className="px-2.5 py-1 rounded-full text-xs font-semibold uppercase tracking-wider bg-red-100 dark:bg-red-950/50 text-red-700 dark:text-red-300 border border-red-300 dark:border-red-800">
                           {item.status}
                         </span>
                       </td>
                       <td className="px-6 py-4 text-sm">
-                        <button className="text-purple-400 hover:text-purple-300 transition-colors text-xs font-medium cursor-pointer">
+                        <button className="px-3 py-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-800 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 transition-colors text-xs font-semibold cursor-pointer">
                           Resolve
                         </button>
                       </td>
@@ -140,7 +140,7 @@ export default function AdminLostItemsPage() {
                   ))}
                   {lostItems.length === 0 && (
                     <tr>
-                      <td colSpan={6} className="px-6 py-8 text-center text-foreground/40 text-sm">
+                      <td colSpan={6} className="px-6 py-8 text-center text-slate-500 dark:text-slate-400 text-sm">
                         No lost items found.
                       </td>
                     </tr>

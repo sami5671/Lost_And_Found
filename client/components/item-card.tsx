@@ -64,19 +64,19 @@ export function ItemCard({ item, onClick }: ItemCardProps) {
       {/* Content */}
       <div className="p-4 flex-1 flex flex-col gap-3">
         <div>
-          <h3 className="font-bold text-foreground line-clamp-2">{item.title}</h3>
-          <p className="text-xs text-foreground/50 line-clamp-2">
+          <h3 className="font-bold text-slate-900 dark:text-white line-clamp-2">{item.title}</h3>
+          <p className="text-xs text-slate-600 dark:text-slate-400 line-clamp-2 mt-1">
             {item.description}
           </p>
         </div>
 
         <div className="space-y-2 text-sm">
-          <div className="flex items-center gap-2 text-foreground/70">
-            <Calendar className="w-4 h-4" />
+          <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300">
+            <Calendar className="w-4 h-4 text-emerald-500" />
             <span>{item.reportedDate}</span>
           </div>
-          <div className="flex items-center gap-2 text-foreground/70">
-            <MapPin className="w-4 h-4" />
+          <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300">
+            <MapPin className="w-4 h-4 text-emerald-500" />
             <span className="line-clamp-1">{item.location}</span>
           </div>
         </div>

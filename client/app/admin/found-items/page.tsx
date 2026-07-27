@@ -139,64 +139,64 @@ export default function AdminFoundItemsPage() {
       >
         {/* Header */}
         <div>
-          <h1 className="text-4xl font-bold text-white mb-2">Found Items Management</h1>
-          <p className="text-foreground/60">Manage all items found on campus</p>
+          <h1 className="text-4xl font-extrabold text-slate-900 dark:text-white mb-2">Found Items Management</h1>
+          <p className="text-slate-600 dark:text-slate-400">Manage all items found on campus</p>
         </div>
 
         {/* Search */}
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-foreground/40" />
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 dark:text-foreground/40" />
           <input
             type="text"
             placeholder="Search by title, description or location..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-3 rounded-lg glass-dark border border-purple-500/20 focus:border-purple-500/50 focus:outline-none transition-colors"
+            className="w-full pl-10 pr-4 py-3 rounded-xl bg-white dark:bg-[#0c1a30] border border-emerald-500/30 dark:border-emerald-500/20 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 shadow-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 focus:outline-none transition-all"
           />
         </div>
 
         {/* Found Items Table */}
         {loading ? (
           <div className="flex items-center justify-center py-20">
-            <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-purple-500"></div>
+            <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-emerald-500"></div>
           </div>
         ) : (
           <GlassCard>
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b border-purple-500/20">
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-foreground/60">Item</th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-foreground/60">Category</th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-foreground/60">Location Found</th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-foreground/60">Date Found</th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-foreground/60">Status</th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-foreground/60">Action</th>
+                  <tr className="border-b border-slate-200 dark:border-emerald-500/20">
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-slate-700 dark:text-slate-300">Item</th>
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-slate-700 dark:text-slate-300">Category</th>
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-slate-700 dark:text-slate-300">Location Found</th>
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-slate-700 dark:text-slate-300">Date Found</th>
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-slate-700 dark:text-slate-300">Status</th>
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-slate-700 dark:text-slate-300">Action</th>
                   </tr>
                 </thead>
                 <tbody>
                   {foundItems.map((item, idx) => (
                     <motion.tr
                       key={item.id}
-                      className="border-b border-purple-500/10 hover:bg-white/5 transition-colors"
+                      className="border-b border-slate-100 dark:border-white/5 hover:bg-slate-50 dark:hover:bg-white/5 transition-colors"
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       transition={{ delay: idx * 0.1 }}
                     >
                       <td className="px-6 py-4">
                         <div className="flex flex-col">
-                          <span className="font-semibold text-sm text-white">{item.title}</span>
-                          <span className="text-xs text-foreground/40 line-clamp-1">{item.description}</span>
+                          <span className="font-semibold text-sm text-slate-900 dark:text-white">{item.title}</span>
+                          <span className="text-xs text-slate-500 dark:text-slate-400 line-clamp-1">{item.description}</span>
                         </div>
                       </td>
-                      <td className="px-6 py-4 text-sm text-foreground/60 capitalize">{item.category}</td>
-                      <td className="px-6 py-4 text-sm text-foreground/60">{item.location}</td>
-                      <td className="px-6 py-4 text-sm text-foreground/60">{item.reportedDate}</td>
+                      <td className="px-6 py-4 text-sm text-slate-700 dark:text-slate-300 capitalize">{item.category}</td>
+                      <td className="px-6 py-4 text-sm text-slate-700 dark:text-slate-300">{item.location}</td>
+                      <td className="px-6 py-4 text-sm text-slate-700 dark:text-slate-300">{item.reportedDate}</td>
                       <td className="px-6 py-4 text-sm">
-                        <span className={`px-2 py-1 rounded text-xs font-medium uppercase ${
+                        <span className={`px-2.5 py-1 rounded-full text-xs font-semibold uppercase tracking-wider ${
                           (item.status as string) === 'resolved' 
-                            ? 'bg-purple-500/20 text-purple-300' 
-                            : 'bg-green-500/20 text-green-300'
+                            ? 'bg-purple-100 dark:bg-purple-950/50 text-purple-700 dark:text-purple-300 border border-purple-300 dark:border-purple-800' 
+                            : 'bg-emerald-100 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800'
                         }`}>
                           {item.status}
                         </span>
@@ -206,12 +206,12 @@ export default function AdminFoundItemsPage() {
                           <button
                             disabled={verifyingItemId !== null}
                             onClick={() => handleVerifyOwnerClick(item.id)}
-                            className="text-purple-400 hover:text-purple-300 disabled:text-foreground/20 disabled:cursor-not-allowed transition-colors text-xs font-medium cursor-pointer"
+                            className="px-3 py-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-800 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-xs font-semibold cursor-pointer"
                           >
                             {verifyingItemId === item.id ? 'Checking Match...' : 'Verify Owner'}
                           </button>
                         ) : (
-                          <span className="text-foreground/30 text-xs font-medium uppercase">Resolved</span>
+                          <span className="text-slate-400 dark:text-foreground/30 text-xs font-semibold uppercase">Resolved</span>
                         )}
                       </td>
                     </motion.tr>
@@ -248,20 +248,20 @@ export default function AdminFoundItemsPage() {
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="relative w-full max-w-lg glass-dark border border-purple-500/30 overflow-hidden shadow-2xl flex flex-col max-h-[90vh] z-10"
+              className="relative w-full max-w-lg bg-white dark:bg-[#0c1a30] border border-emerald-500/30 dark:border-emerald-500/20 rounded-2xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh] z-10"
             >
               {/* Header */}
-              <div className="flex items-center justify-between px-6 py-4 border-b border-purple-500/20 bg-purple-950/20">
+              <div className="flex items-center justify-between px-6 py-5 border-b border-slate-200 dark:border-emerald-500/20 bg-slate-50 dark:bg-emerald-950/30">
                 <div>
-                  <h3 className="text-xl font-bold text-white flex items-center gap-2">
-                    <CheckCircle2 className="w-5 h-5 text-purple-400" />
+                  <h3 className="text-xl font-extrabold text-slate-900 dark:text-white flex items-center gap-2.5">
+                    <CheckCircle2 className="w-6 h-6 text-emerald-500" />
                     AI Owner Verification Preview
                   </h3>
-                  <p className="text-xs text-foreground/60 mt-1">Verify AI similarity before confirming owner notifications.</p>
+                  <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">Verify AI similarity before confirming owner notifications.</p>
                 </div>
                 <button
                   onClick={() => setShowMatchModal(false)}
-                  className="text-foreground/40 hover:text-white p-1 rounded-full hover:bg-white/10 transition-colors cursor-pointer"
+                  className="text-slate-400 dark:text-slate-400 hover:text-slate-700 dark:hover:text-white p-1.5 rounded-full hover:bg-slate-200 dark:hover:bg-white/10 transition-colors cursor-pointer"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -270,47 +270,47 @@ export default function AdminFoundItemsPage() {
               {/* Body */}
               <div className="p-6 overflow-y-auto space-y-6">
                 {/* Confidence Bar */}
-                <div className="flex flex-col items-center justify-center p-4 rounded-xl bg-purple-950/30 border border-purple-500/20 relative overflow-hidden">
-                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 bg-purple-500/10 rounded-full blur-3xl pointer-events-none" />
+                <div className="flex flex-col items-center justify-center p-6 rounded-2xl bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-950/40 dark:to-teal-950/40 border border-emerald-500/30 dark:border-emerald-500/20 relative overflow-hidden shadow-sm">
+                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
                   
-                  <span className="text-xs font-semibold text-purple-300 uppercase tracking-wider mb-1">AI Match Score</span>
-                  <div className="flex items-baseline gap-1">
-                    <span className={`text-4xl font-extrabold tracking-tight ${
-                      matchData.score >= 0.8 
-                        ? 'text-green-400 drop-shadow-[0_0_15px_rgba(74,222,128,0.35)]' 
-                        : 'text-yellow-400 drop-shadow-[0_0_15px_rgba(250,204,21,0.35)]'
+                  <span className="text-xs font-extrabold text-emerald-700 dark:text-emerald-300 uppercase tracking-wider mb-1">AI Match Score</span>
+                  <div className="flex items-baseline gap-1 my-1">
+                    <span className={`text-5xl font-extrabold tracking-tight ${
+                      matchData.score >= 0.78 
+                        ? 'text-emerald-600 dark:text-emerald-400 drop-shadow-[0_0_20px_rgba(16,185,129,0.35)]' 
+                        : 'text-amber-600 dark:text-yellow-400 drop-shadow-[0_0_20px_rgba(245,158,11,0.35)]'
                     }`}>
                       {(matchData.score * 100).toFixed(1)}%
                     </span>
                   </div>
-                  <span className={`text-xs mt-2 px-3 py-1 rounded-full border font-medium ${
-                    matchData.score >= 0.8
-                      ? 'bg-green-500/10 border-green-500/20 text-green-400'
-                      : 'bg-yellow-500/10 border-yellow-500/20 text-yellow-400'
+                  <span className={`text-xs mt-2 px-3.5 py-1.5 rounded-full border font-bold uppercase tracking-wide ${
+                    matchData.score >= 0.78
+                      ? 'bg-emerald-500/15 border-emerald-500/30 text-emerald-700 dark:text-emerald-300'
+                      : 'bg-amber-500/15 border-amber-500/30 text-amber-700 dark:text-yellow-400'
                   }`}>
-                    {matchData.score >= 0.8 ? 'High Confidence (Auto-Match Approved)' : 'Low/Moderate Confidence (Manual Check Recommended)'}
+                    {matchData.score >= 0.78 ? 'High Confidence (Match Verified)' : 'Moderate Confidence (Review Suggested)'}
                   </span>
                 </div>
 
                 {/* Owner Information */}
-                <div className="p-4 rounded-xl border border-purple-500/20 bg-purple-950/10 space-y-3">
-                  <h5 className="text-sm font-bold text-white flex items-center gap-2">
-                    <UserIcon className="w-4 h-4 text-purple-400" />
+                <div className="p-5 rounded-2xl border border-slate-200 dark:border-emerald-500/20 bg-slate-50/70 dark:bg-emerald-950/20 space-y-4">
+                  <h5 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                    <UserIcon className="w-4 h-4 text-emerald-500" />
                     Claimant / Owner Information
                   </h5>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
-                    <div className="flex items-center gap-2.5 p-3 rounded-lg bg-black/20 border border-white/5">
-                      <UserIcon className="w-4 h-4 text-foreground/40" />
+                    <div className="flex items-center gap-3 p-3.5 rounded-xl bg-white dark:bg-black/30 border border-slate-200 dark:border-white/10 shadow-sm">
+                      <UserIcon className="w-4 h-4 text-emerald-500" />
                       <div className="flex flex-col">
-                        <span className="text-[10px] text-foreground/40 uppercase">Full Name</span>
-                        <span className="text-sm font-semibold text-white">{matchData.matchedItem.owner.name}</span>
+                        <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Full Name</span>
+                        <span className="text-sm font-bold text-slate-900 dark:text-white">{matchData.matchedItem.owner.name}</span>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2.5 p-3 rounded-lg bg-black/20 border border-white/5">
-                      <Mail className="w-4 h-4 text-foreground/40" />
+                    <div className="flex items-center gap-3 p-3.5 rounded-xl bg-white dark:bg-black/30 border border-slate-200 dark:border-white/10 shadow-sm">
+                      <Mail className="w-4 h-4 text-emerald-500" />
                       <div className="flex flex-col">
-                        <span className="text-[10px] text-foreground/40 uppercase">Email Address</span>
-                        <span className="text-sm font-semibold text-white">{matchData.matchedItem.owner.email}</span>
+                        <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Email Address</span>
+                        <span className="text-sm font-bold text-slate-900 dark:text-white">{matchData.matchedItem.owner.email}</span>
                       </div>
                     </div>
                   </div>
@@ -318,17 +318,17 @@ export default function AdminFoundItemsPage() {
               </div>
 
               {/* Footer */}
-              <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-purple-500/20 bg-purple-950/20">
+              <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-slate-200 dark:border-emerald-500/20 bg-slate-50 dark:bg-emerald-950/30">
                 <button
                   onClick={() => setShowMatchModal(false)}
-                  className="px-5 py-2 text-sm font-semibold text-foreground/60 hover:text-white border border-white/10 hover:bg-white/5 rounded-lg transition-colors cursor-pointer"
+                  className="px-5 py-2.5 text-sm font-semibold text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white border border-slate-300 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-white/5 rounded-xl transition-all cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleConfirmVerification}
                   disabled={confirmingVerify}
-                  className="px-5 py-2 text-sm font-semibold text-white bg-gradient-to-r from-purple-600 to-pink-500 hover:shadow-lg hover:shadow-purple-500/30 rounded-lg hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed transition-all cursor-pointer flex items-center gap-1.5"
+                  className="px-6 py-2.5 text-sm font-bold text-white bg-gradient-to-r from-emerald-600 to-teal-500 hover:shadow-lg hover:shadow-emerald-500/30 rounded-xl hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed transition-all cursor-pointer flex items-center gap-2"
                 >
                   {confirmingVerify ? (
                     <>

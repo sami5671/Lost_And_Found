@@ -87,14 +87,14 @@ export default function AdminReportsPage() {
       >
         {/* Header */}
         <div>
-          <h1 className="text-4xl font-bold text-white mb-2">Reports & Analytics</h1>
-          <p className="text-foreground/60">Analyze system activity and recovery metrics</p>
+          <h1 className="text-4xl font-extrabold text-slate-900 dark:text-white mb-2">Reports & Analytics</h1>
+          <p className="text-slate-600 dark:text-slate-400">Analyze system activity and recovery metrics</p>
         </div>
 
         {loading ? (
           <div className="flex flex-col items-center justify-center py-40 gap-3">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500"></div>
-            <span className="text-sm text-foreground/40 font-medium">Aggregating database statistics...</span>
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-emerald-500"></div>
+            <span className="text-sm text-slate-600 dark:text-slate-400 font-medium">Aggregating database statistics...</span>
           </div>
         ) : (
           <>
@@ -109,13 +109,13 @@ export default function AdminReportsPage() {
                 >
                   <GlassCard className="p-6 space-y-4">
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-foreground/60 font-semibold">{stat.label}</span>
-                      <div className="p-2 rounded-lg bg-white/5">{stat.icon}</div>
+                      <span className="text-sm text-slate-600 dark:text-slate-400 font-semibold">{stat.label}</span>
+                      <div className="p-2.5 rounded-xl bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10">{stat.icon}</div>
                     </div>
                     <div className="flex items-baseline justify-between">
-                      <p className="text-3xl font-bold text-white">{stat.value}</p>
-                      <span className="text-xs text-green-400 font-medium flex items-center">
-                        {stat.pct} <ArrowUpRight className="w-3 h-3 ml-0.5" />
+                      <p className="text-3xl font-extrabold text-slate-900 dark:text-white">{stat.value}</p>
+                      <span className="text-xs text-emerald-600 dark:text-emerald-400 font-bold flex items-center">
+                        {stat.pct} <ArrowUpRight className="w-3.5 h-3.5 ml-0.5" />
                       </span>
                     </div>
                   </GlassCard>
@@ -126,41 +126,41 @@ export default function AdminReportsPage() {
             {/* Chart Summary */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <GlassCard className="p-6 space-y-6">
-                <h2 className="text-xl font-bold text-white">Recovery Performance</h2>
-                <div className="space-y-4">
+                <h2 className="text-xl font-bold text-slate-900 dark:text-white">Recovery Performance</h2>
+                <div className="space-y-5">
                   <div>
-                    <div className="flex justify-between text-sm mb-1.5">
-                      <span className="text-foreground/60">Lost vs Found Ratio</span>
-                      <span className="font-semibold text-white">
+                    <div className="flex justify-between text-sm mb-2">
+                      <span className="text-slate-600 dark:text-slate-400 font-medium">Lost vs Found Ratio</span>
+                      <span className="font-bold text-slate-900 dark:text-white">
                         {lostCount} lost / {foundCount} found
                       </span>
                     </div>
-                    <div className="h-2 bg-white/5 rounded-full overflow-hidden flex">
+                    <div className="h-2.5 bg-slate-100 dark:bg-white/10 rounded-full overflow-hidden flex">
                       <div className="h-full bg-red-500" style={{ width: `${lostPercent}%` }} />
-                      <div className="h-full bg-green-500" style={{ width: `${foundPercent}%` }} />
+                      <div className="h-full bg-emerald-500" style={{ width: `${foundPercent}%` }} />
                     </div>
                   </div>
 
                   <div>
-                    <div className="flex justify-between text-sm mb-1.5">
-                      <span className="text-foreground/60">Match Resolution Success</span>
-                      <span className="font-semibold text-white">
+                    <div className="flex justify-between text-sm mb-2">
+                      <span className="text-slate-600 dark:text-slate-400 font-medium">Match Resolution Success</span>
+                      <span className="font-bold text-slate-900 dark:text-white">
                         {statsData?.successRate ?? 0}% ({statsData?.itemsRecovered ?? 0} / {totalMatchesCount} matches)
                       </span>
                     </div>
-                    <div className="h-2 bg-white/5 rounded-full overflow-hidden">
-                      <div className="h-full bg-purple-500" style={{ width: `${statsData?.successRate ?? 0}%` }} />
+                    <div className="h-2.5 bg-slate-100 dark:bg-white/10 rounded-full overflow-hidden">
+                      <div className="h-full bg-emerald-500" style={{ width: `${statsData?.successRate ?? 0}%` }} />
                     </div>
                   </div>
 
                   <div>
-                    <div className="flex justify-between text-sm mb-1.5">
-                      <span className="text-foreground/60">Registered System Accounts</span>
-                      <span className="font-semibold text-white">
+                    <div className="flex justify-between text-sm mb-2">
+                      <span className="text-slate-600 dark:text-slate-400 font-medium">Registered System Accounts</span>
+                      <span className="font-bold text-slate-900 dark:text-white">
                         {statsData?.activeUsers ?? 0} active users
                       </span>
                     </div>
-                    <div className="h-2 bg-white/5 rounded-full overflow-hidden">
+                    <div className="h-2.5 bg-slate-100 dark:bg-white/10 rounded-full overflow-hidden">
                       <div className="h-full bg-blue-500" style={{ width: '100%' }} />
                     </div>
                   </div>
@@ -169,25 +169,25 @@ export default function AdminReportsPage() {
 
               {/* Activity Log */}
               <GlassCard className="p-6 space-y-4">
-                <h2 className="text-xl font-bold text-white">Recent System Logs</h2>
-                <div className="space-y-4">
+                <h2 className="text-xl font-bold text-slate-900 dark:text-white">Recent System Logs</h2>
+                <div className="space-y-3">
                   {(statsData?.recentLogs ?? []).length === 0 ? (
-                    <p className="text-sm text-foreground/40 font-medium py-6 text-center">
+                    <p className="text-sm text-slate-500 dark:text-slate-400 font-medium py-6 text-center">
                       No system activity recorded yet.
                     </p>
                   ) : (
                     (statsData.recentLogs).map((log: any) => (
-                      <div key={log.id} className="flex items-start justify-between gap-4 p-3 rounded-lg hover:bg-white/5 transition-colors border border-purple-500/5">
+                      <div key={log.id} className="flex items-start justify-between gap-4 p-3.5 rounded-xl hover:bg-slate-50 dark:hover:bg-white/5 transition-colors border border-slate-100 dark:border-white/5">
                         <div className="flex items-start gap-3">
-                          <div className="mt-1.5">
-                            <Clock className="w-4 h-4 text-foreground/40" />
+                          <div className="mt-1">
+                            <Clock className="w-4 h-4 text-emerald-500 dark:text-emerald-400" />
                           </div>
                           <div>
-                            <h4 className="font-semibold text-sm text-white">{log.action}</h4>
-                            <p className="text-xs text-foreground/60">{log.details}</p>
+                            <h4 className="font-bold text-sm text-slate-900 dark:text-white">{log.action}</h4>
+                            <p className="text-xs text-slate-600 dark:text-slate-300 mt-0.5">{log.details}</p>
                           </div>
                         </div>
-                        <span className="text-[10px] text-foreground/40 whitespace-nowrap">
+                        <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 whitespace-nowrap">
                           {formatRelativeTime(log.time)}
                         </span>
                       </div>

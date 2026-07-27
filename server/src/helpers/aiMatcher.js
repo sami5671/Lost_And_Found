@@ -4,7 +4,7 @@ const Item = require("../models/items");
 
 const triggerAIMatching = async (newItem) => {
   try {
-    const aiServiceURL = process.env.AI_SERVICE_URL || "http://localhost:5000";
+    let aiServiceURL = process.env.AI_SERVICE_URL || "http://localhost:5000";
 
     const oppositeType = newItem.type === "lost" ? "found" : "lost";
     const candidates = await Item.find({ 
@@ -39,20 +39,35 @@ const triggerAIMatching = async (newItem) => {
     };
 
     console.log(`Sending matching request to AI service: ${aiServiceURL}/match`);
-    const response = await axios.post(`${aiServiceURL}/match`, payload, {
-      headers: {
-        "ngrok-skip-browser-warning": "true",
-        "User-Agent": "LostAndFoundServer"
+    let response;
+    try {
+      response = await axios.post(`${aiServiceURL}/match`, payload, {
+        headers: {
+          "ngrok-skip-browser-warning": "true",
+          "User-Agent": "LostAndFoundServer"
+        },
+        timeout: 30000
+      });
+      if (typeof response.data !== "object" || response.data === null || !response.data.status) {
+        throw new Error("Invalid AI service response format");
       }
-    });
+    } catch (primaryErr) {
+      if (aiServiceURL !== "http://localhost:5000") {
+        console.warn(`Primary AI Service URL (${aiServiceURL}) failed (${primaryErr.message}). Retrying directly with http://localhost:5000...`);
+        aiServiceURL = "http://localhost:5000";
+        response = await axios.post(`${aiServiceURL}/match`, payload, { timeout: 30000 });
+      } else {
+        throw primaryErr;
+      }
+    }
 
     if (response.data && response.data.status && response.data.matches) {
       const matches = response.data.matches;
       console.log(`AI matching computed ${matches.length} scores.`);
       
-      // Save top matches with score >= 0.80 (allowing matches with high similarity to be stored)
+      // Save top matches with score >= 0.78 (78% confidence or above)
       for (const m of matches) {
-        if (m.score >= 0.80) {
+        if (m.score >= 0.78) {
           const lostId = newItem.type === "lost" ? newItem._id : m.candidate_id;
           const foundId = newItem.type === "lost" ? m.candidate_id : newItem._id;
 

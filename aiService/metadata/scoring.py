@@ -40,11 +40,19 @@ def compare_dates(date_str1, date_str2):
 class ScoringPipeline:
     @staticmethod
     def compute_hybrid_score(target: dict, candidate: dict) -> float:
-        # 1. Serial number / unique code check
-        target_serials = target.get("serials", [])
-        candidate_serials = candidate.get("serials", [])
-        if target_serials and candidate_serials:
-            common = set(target_serials).intersection(set(candidate_serials))
+        # 1. Serial number / Student ID / unique code check
+        student_id_pattern = r'\b\d{3}-\d{2}-\d{3,5}\b'
+        t_serials = set(target.get("serials", []))
+        c_serials = set(candidate.get("serials", []))
+        
+        t_full_text = f"{target.get('title', '')} {target.get('description', '')} {target.get('ocr_text', '')}"
+        c_full_text = f"{candidate.get('title', '')} {candidate.get('description', '')} {candidate.get('ocr_text', '')}"
+        
+        t_serials.update(re.findall(student_id_pattern, t_full_text, re.IGNORECASE))
+        c_serials.update(re.findall(student_id_pattern, c_full_text, re.IGNORECASE))
+        
+        if t_serials and c_serials:
+            common = t_serials.intersection(c_serials)
             if common:
                 return 0.99
 
@@ -75,20 +83,24 @@ class ScoringPipeline:
         # Date (3%)
         scores["date"] = compare_dates(target.get("date"), candidate.get("date"))
         
-        # Description embedding (15%)
+        # Description & Title text similarity (15%)
         target_desc_emb = target.get("description_embedding")
         candidate_desc_emb = candidate.get("description_embedding")
+        
+        t_words = set(re.findall(r'\b\w{2,}\b', f"{target.get('title', '')} {target.get('description', '')}".lower()))
+        c_words = set(re.findall(r'\b\w{2,}\b', f"{candidate.get('title', '')} {candidate.get('description', '')}".lower()))
+        
+        jaccard_sim = 0.0
+        if t_words or c_words:
+            intersection = t_words.intersection(c_words)
+            union = t_words.union(c_words)
+            jaccard_sim = len(intersection) / len(union) if union else 0.0
+            
         if target_desc_emb and candidate_desc_emb:
-            scores["description_embedding"] = TextSimilarity.cosine_similarity(target_desc_emb, candidate_desc_emb)
+            emb_sim = TextSimilarity.cosine_similarity(target_desc_emb, candidate_desc_emb)
+            scores["description_embedding"] = 0.70 * emb_sim + 0.30 * jaccard_sim
         else:
-            t1 = set(target.get("title", "").lower().split())
-            t2 = set(candidate.get("title", "").lower().split())
-            if t1 or t2:
-                intersection = t1.intersection(t2)
-                union = t1.union(t2)
-                scores["description_embedding"] = len(intersection) / len(union) if union else 0.0
-            else:
-                scores["description_embedding"] = 0.0
+            scores["description_embedding"] = jaccard_sim
 
         # Image-related features (if images exist on both sides)
         has_images = False
@@ -161,14 +173,10 @@ class ScoringPipeline:
             norm_weight = weight / total_active_weight
             final_score += scores.get(key, 0.0) * norm_weight
             
-        # Category matching multiplier
-        if scores["category"] == 1.0:
-            final_score = final_score * 1.10
-        elif scores["category"] == 0.3:
-            # Soft penalty for "Others" category
-            final_score = final_score * 0.90
-        else:
-            # Flat mismatch penalty
-            final_score = final_score * 0.50
+        # Smooth Category Scaling
+        if scores["category"] >= 0.9:
+            final_score = final_score * 1.05
+        elif scores["category"] < 0.5:
+            final_score = final_score * 0.95
 
         return float(max(0.0, min(1.0, final_score)))

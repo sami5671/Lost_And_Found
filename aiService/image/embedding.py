@@ -90,9 +90,11 @@ class ImageEmbedder:
         embedding = np.zeros(512)
         try:
             if os.path.exists(image_path):
-                file_size = os.path.getsize(image_path)
-                basename = os.path.basename(image_path)
-                seed = file_size + sum(ord(c) for c in basename)
+                import hashlib
+                with open(image_path, "rb") as f:
+                    file_bytes = f.read()
+                hash_digest = hashlib.md5(file_bytes).hexdigest()
+                seed = int(hash_digest[:8], 16)
                 np.random.seed(seed)
             else:
                 np.random.seed(42)

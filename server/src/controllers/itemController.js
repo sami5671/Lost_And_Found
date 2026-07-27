@@ -352,7 +352,26 @@ const verifyOwner = async (req, res, next) => {
 
       let matches = [];
       try {
-        const aiResponse = await axios.post(`${aiServiceURL}/match`, payload);
+        let aiResponse;
+        try {
+          aiResponse = await axios.post(`${aiServiceURL}/match`, payload, {
+            headers: {
+              "ngrok-skip-browser-warning": "true",
+              "User-Agent": "LostAndFoundServer"
+            },
+            timeout: 30000
+          });
+          if (typeof aiResponse.data !== "object" || aiResponse.data === null || !aiResponse.data.status) {
+            throw new Error("Invalid AI service response format");
+          }
+        } catch (primErr) {
+          if (aiServiceURL !== "http://localhost:5000") {
+            console.warn(`Primary AI Service (${aiServiceURL}) failed in verifyOwner (${primErr.message}). Retrying with http://localhost:5000...`);
+            aiResponse = await axios.post("http://localhost:5000/match", payload, { timeout: 30000 });
+          } else {
+            throw primErr;
+          }
+        }
         if (aiResponse.data && aiResponse.data.status) {
           matches = aiResponse.data.matches;
         }
@@ -370,10 +389,10 @@ const verifyOwner = async (req, res, next) => {
         }).sort((a, b) => b.score - a.score);
       }
 
-      // 4. Select best candidate (similarity must be >= 0.80)
+      // 4. Select best candidate (similarity must be >= 0.78)
       const bestMatch = matches[0];
-      if (!bestMatch || bestMatch.score < 0.80) {
-        return apiResponse(res, 404, false, "AI could not identify a highly confident matching owner (similarity score below 80%).");
+      if (!bestMatch || bestMatch.score < 0.78) {
+        return apiResponse(res, 404, false, "AI could not identify a confident matching owner (similarity score below 78%).");
       }
 
       matchingLostItemId = bestMatch.candidate_id;
@@ -491,12 +510,26 @@ const checkOwnerMatch = async (req, res, next) => {
 
     let matches = [];
     try {
-      const aiResponse = await axios.post(`${aiServiceURL}/match`, payload, {
-        headers: {
-          "ngrok-skip-browser-warning": "true",
-          "User-Agent": "LostAndFoundServer"
+      let aiResponse;
+      try {
+        aiResponse = await axios.post(`${aiServiceURL}/match`, payload, {
+          headers: {
+            "ngrok-skip-browser-warning": "true",
+            "User-Agent": "LostAndFoundServer"
+          },
+          timeout: 30000
+        });
+        if (typeof aiResponse.data !== "object" || aiResponse.data === null || !aiResponse.data.status) {
+          throw new Error("Invalid AI service response format");
         }
-      });
+      } catch (primErr) {
+        if (aiServiceURL !== "http://localhost:5000") {
+          console.warn(`Primary AI Service (${aiServiceURL}) failed in checkOwnerMatch (${primErr.message}). Retrying with http://localhost:5000...`);
+          aiResponse = await axios.post("http://localhost:5000/match", payload, { timeout: 30000 });
+        } else {
+          throw primErr;
+        }
+      }
       if (aiResponse.data && aiResponse.data.status) {
         matches = aiResponse.data.matches;
       }
