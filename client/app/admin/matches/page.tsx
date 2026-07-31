@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react'
 import { DashboardLayout } from '@/components/dashboard-layout'
 import { GlassCard } from '@/components/glass-card'
 import { GradientButton } from '@/components/gradient-button'
-import { Users, Package, AlertCircle, CheckCircle2, TrendingUp, BarChart3, ArrowRight, XCircle, CheckCircle } from 'lucide-react'
+import { Users, Package, AlertCircle, CheckCircle2, TrendingUp, BarChart3, ArrowRight, XCircle, CheckCircle, User } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { handleGetMatches, handleApproveMatch, handleDismissMatch } from '@/actions/admin/match-actions'
 
@@ -16,6 +16,7 @@ export default function AdminMatchesPage() {
     { label: 'Found Items', href: '/admin/found-items', icon: <CheckCircle2 className="w-5 h-5" /> },
     { label: 'Matches', href: '/admin/matches', icon: <AlertCircle className="w-5 h-5" /> },
     { label: 'Reports', href: '/admin/reports', icon: <TrendingUp className="w-5 h-5" /> },
+    { label: 'Profile', href: '/admin/profile', icon: <User className="w-5 h-5" /> },
   ]
 
   const [matches, setMatches] = useState<any[]>([])

@@ -291,3 +291,31 @@ export async function changePasswordAction(formData: FormData) {
         return { status: false, error: errorMessage };
     }
 }
+
+// Update Profile Action
+export async function updateProfileAction(formData: FormData) {
+    try {
+        const res = await apiClient("/user/updateProfile", {
+            method: "PATCH",
+            body: formData,
+            isFormData: true,
+            cache: "no-store",
+        });
+
+        if (!res?.status || !res?.data) {
+            return {
+                status: false,
+                error: res?.message || "Failed to update profile!",
+            };
+        }
+
+        return {
+            status: true,
+            message: res?.message || "Profile updated successfully!",
+            user: res.data.user,
+        };
+    } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred!";
+        return { status: false, error: errorMessage };
+    }
+}

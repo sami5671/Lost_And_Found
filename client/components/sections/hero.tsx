@@ -25,7 +25,7 @@ export function HeroSection() {
     visible: {
       opacity: 1,
       y: 0,
-      transition: { duration: 0.8, ease: 'easeOut' },
+      transition: { duration: 0.8 },
     },
   }
 
@@ -73,7 +73,7 @@ export function HeroSection() {
               Report Lost Item
             </GradientButton>
           </Link>
-          <Link href="/browse">
+          <Link href={isAuthenticated ? "/dashboard" : "/login"}>
             <GradientButton variant="secondary" size="lg" className="gap-2">
               <Search className="w-5 h-5" />
               Browse Found Items

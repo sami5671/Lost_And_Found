@@ -17,10 +17,17 @@ export interface User {
   fullName?: string
   role: UserRole
   primaryNumber?: string
+  alternativeNumber?: string
+  alternativeEmail?: string
   occupation?: string
+  gender?: string
+  DOB?: string
+  address?: string
   providerId?: string
   avatar?: string
-  address?: string
+  studentId?: string
+  creditsCompleted?: string | number
+  bloodGroup?: string
   idCardFront?: string
   idCardBack?: string
 }
@@ -31,6 +38,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<User>
   register: (formData: FormData) => Promise<User>
   logout: () => Promise<void>
+  updateUser: (updatedData: Partial<User>) => void
   isAuthenticated: boolean
 }
 
@@ -43,6 +51,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     // Check for stored session on mount and verify it with the server
     const syncSession = async () => {
+      const storedUser = typeof window !== 'undefined' ? localStorage.getItem('user') : null
+      if (storedUser) {
+        try {
+          setUser(JSON.parse(storedUser))
+        } catch (e) {
+          localStorage.removeItem('user')
+        }
+      }
+
       try {
         const res = await getCurrentUser()
         if (res.status && res.user) {
@@ -131,6 +148,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
+  const updateUser = (updatedData: Partial<User>) => {
+    setUser((prev) => {
+      if (!prev) return null
+      const newObj = { ...prev, ...updatedData }
+      if (updatedData.fullName || updatedData.name) {
+        newObj.name = updatedData.fullName || updatedData.name || prev.name
+      }
+      localStorage.setItem('user', JSON.stringify(newObj))
+      return newObj
+    })
+  }
+
   return (
     <AuthContext.Provider
       value={{
@@ -139,6 +168,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         login,
         register,
         logout,
+        updateUser,
         isAuthenticated: !!user,
       }}
     >

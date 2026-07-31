@@ -15,10 +15,9 @@ import { useAuth } from '@/lib/auth-context'
 
 export default function StudentDashboard() {
   const { user } = useAuth()
-  const email = user?.email || ''
-  const idMatch = email.match(/\d+-\d+/)
-  const studentId = user?.providerId || (idMatch ? `222-${idMatch[0]}` : '222-16-656')
+  const studentId = user?.studentId || user?.providerId || ''
   const router = useRouter()
+  
   const sidebarItems = [
     { label: 'Dashboard', href: '/dashboard', icon: <BarChart3 className="w-5 h-5" /> },
     { label: 'Report Now', href: '/report', icon: <Plus className="w-5 h-5" /> },
@@ -52,7 +51,6 @@ export default function StudentDashboard() {
         }
 
         if (itemsRes.status && itemsRes.data) {
-          // Map mongoose Item structure to frontend Item structure
           const mapped: FrontendItem[] = itemsRes.data.map((item: any) => ({
             id: item._id,
             title: item.title,
@@ -66,7 +64,6 @@ export default function StudentDashboard() {
             contactEmail: item.contactInfo || '',
           }))
 
-          // Filter matching/active matches
           const matched = mapped.filter(item => item.status === 'lost' || item.status === 'claimed').slice(0, 3)
           setRecentMatches(matched)
         }
@@ -79,6 +76,21 @@ export default function StudentDashboard() {
 
     loadDashboardData()
   }, [])
+
+  const formatDOB = (dobStr?: string) => {
+    if (!dobStr) return ''
+    try {
+      const date = new Date(dobStr)
+      if (isNaN(date.getTime())) return dobStr
+      return date.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+      })
+    } catch (e) {
+      return dobStr
+    }
+  }
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -121,61 +133,83 @@ export default function StudentDashboard() {
           </Link>
         </motion.div>
 
-        {/* DIU Student Profile Card */}
+        {/* Student Profile Card */}
         <motion.div variants={itemVariants} className="w-full">
           <div className="bg-gradient-to-r from-blue-100 to-indigo-50 dark:from-[#1e293b] dark:to-[#0f172a] rounded-2xl border border-blue-200/50 dark:border-slate-800 p-6 md:p-8 flex flex-col md:flex-row items-center gap-6 shadow-sm">
-            {/* Left Section: Avatar and Status */}
+            {/* Left Section: Avatar */}
             <div className="flex flex-col items-center gap-3">
               <div className="relative w-28 h-28 rounded-full border-4 border-blue-500 overflow-hidden bg-slate-200 shadow-md">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={user?.avatar || '/placeholder-user.jpg'}
-                  alt="Profile Picture"
-                  className="w-full h-full object-cover"
-                />
+                {user?.avatar ? (
+                  /* eslint-disable-next-line @next/next/no-img-element */
+                  <img
+                    src={user.avatar}
+                    alt="Profile Picture"
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-primary/20 flex items-center justify-center text-3xl font-bold text-primary">
+                    {user?.fullName?.charAt(0) || user?.name?.charAt(0) || '🎓'}
+                  </div>
+                )}
               </div>
               <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-bold bg-[#84cc16] text-white shadow-sm">
                 ✓ Active
               </span>
             </div>
 
-            {/* Right Section: Details */}
+            {/* Right Section: Real User Details */}
             <div className="flex-1 w-full text-center md:text-left space-y-4">
               <div>
                 <h2 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white">
-                  {user?.fullName || user?.name || 'Md. Sami Alam'}
+                  {user?.fullName || user?.name || ''}
                 </h2>
-                <p className="text-sm font-medium text-slate-500 dark:text-slate-400 mt-1">
-                  {user?.occupation || 'B.Sc. in Computing & Information System'}
-                </p>
+                {user?.occupation && (
+                  <p className="text-sm font-medium text-slate-500 dark:text-slate-400 mt-1">
+                    {user.occupation}
+                  </p>
+                )}
               </div>
 
-              {/* Information Grid */}
+              {/* Information Grid - Only show filled values */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-y-3 gap-x-6 text-sm text-slate-600 dark:text-slate-300">
-                <div className="flex items-center justify-center md:justify-start gap-2.5">
-                  <span className="w-5 h-5 flex items-center justify-center rounded bg-blue-500/10 text-blue-600 dark:text-blue-400">🪪</span>
-                  <span className="font-semibold">{studentId}</span>
-                </div>
-                <div className="flex items-center justify-center md:justify-start gap-2.5">
-                  <span className="w-5 h-5 flex items-center justify-center rounded bg-blue-500/10 text-blue-600 dark:text-blue-400">✉️</span>
-                  <span className="truncate">{user?.email || 'alam16-656@s.portal.com'}</span>
-                </div>
-                <div className="flex items-center justify-center md:justify-start gap-2.5">
-                  <span className="w-5 h-5 flex items-center justify-center rounded bg-blue-500/10 text-blue-600 dark:text-blue-400">📅</span>
-                  <span>Oct 17, 2003</span>
-                </div>
-                <div className="flex items-center justify-center md:justify-start gap-2.5">
-                  <span className="w-5 h-5 flex items-center justify-center rounded bg-blue-500/10 text-blue-600 dark:text-blue-400">👥</span>
-                  <span>43 Credits</span>
-                </div>
-                <div className="flex items-center justify-center md:justify-start gap-2.5">
-                  <span className="w-5 h-5 flex items-center justify-center rounded bg-blue-500/10 text-blue-600 dark:text-blue-400">📞</span>
-                  <span>{user?.primaryNumber || '01648925559'}</span>
-                </div>
-                <div className="flex items-center justify-center md:justify-start gap-2.5">
-                  <span className="w-5 h-5 flex items-center justify-center rounded bg-blue-500/10 text-blue-600 dark:text-blue-400">🩸</span>
-                  <span className="font-semibold text-red-500 dark:text-red-400">B+ (Male)</span>
-                </div>
+                {studentId && (
+                  <div className="flex items-center justify-center md:justify-start gap-2.5">
+                    <span className="w-5 h-5 flex items-center justify-center rounded bg-blue-500/10 text-blue-600 dark:text-blue-400">🪪</span>
+                    <span className="font-semibold">{studentId}</span>
+                  </div>
+                )}
+                {user?.email && (
+                  <div className="flex items-center justify-center md:justify-start gap-2.5">
+                    <span className="w-5 h-5 flex items-center justify-center rounded bg-blue-500/10 text-blue-600 dark:text-blue-400">✉️</span>
+                    <span className="truncate">{user.email}</span>
+                  </div>
+                )}
+                {user?.DOB && formatDOB(user.DOB) && (
+                  <div className="flex items-center justify-center md:justify-start gap-2.5">
+                    <span className="w-5 h-5 flex items-center justify-center rounded bg-blue-500/10 text-blue-600 dark:text-blue-400">📅</span>
+                    <span>{formatDOB(user.DOB)}</span>
+                  </div>
+                )}
+                {user?.creditsCompleted && (
+                  <div className="flex items-center justify-center md:justify-start gap-2.5">
+                    <span className="w-5 h-5 flex items-center justify-center rounded bg-blue-500/10 text-blue-600 dark:text-blue-400">👥</span>
+                    <span>{user.creditsCompleted.toString().includes('Credits') ? user.creditsCompleted : `${user.creditsCompleted} Credits`}</span>
+                  </div>
+                )}
+                {user?.primaryNumber && (
+                  <div className="flex items-center justify-center md:justify-start gap-2.5">
+                    <span className="w-5 h-5 flex items-center justify-center rounded bg-blue-500/10 text-blue-600 dark:text-blue-400">📞</span>
+                    <span>{user.primaryNumber}</span>
+                  </div>
+                )}
+                {user?.bloodGroup && (
+                  <div className="flex items-center justify-center md:justify-start gap-2.5">
+                    <span className="w-5 h-5 flex items-center justify-center rounded bg-blue-500/10 text-blue-600 dark:text-blue-400">🩸</span>
+                    <span className="font-semibold text-red-500 dark:text-red-400">
+                      {user.bloodGroup} {user.gender ? `(${user.gender})` : ''}
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -314,7 +348,7 @@ export default function StudentDashboard() {
                   <div className="space-y-4 p-6">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm text-slate-500 dark:text-slate-400">This Week</p>
+                        <p className="text-sm text-[#004b87] dark:text-emerald-400 font-semibold">Active Status</p>
                         <p className="text-2xl font-bold">{stats.matchCount} active matches</p>
                       </div>
                       <div className="text-3xl">📊</div>

@@ -86,6 +86,7 @@ export default function AdminFoundItemsPage() {
     { label: 'Found Items', href: '/admin/found-items', icon: <CheckCircle2 className="w-5 h-5" /> },
     { label: 'Matches', href: '/admin/matches', icon: <AlertCircle className="w-5 h-5" /> },
     { label: 'Reports', href: '/admin/reports', icon: <TrendingUp className="w-5 h-5" /> },
+    { label: 'Profile', href: '/admin/profile', icon: <UserIcon className="w-5 h-5" /> },
   ]
 
   useEffect(() => {

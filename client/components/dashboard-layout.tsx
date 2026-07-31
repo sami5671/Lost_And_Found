@@ -1,11 +1,11 @@
 'use client'
 
-import React from 'react'
 import { useAuth } from '@/lib/auth-context'
-import { useRouter } from 'next/navigation'
-import { Sidebar } from './sidebar'
-import { Home, Sun, Moon, LogOut } from 'lucide-react'
+import { Home, LogOut, Moon, Sun } from 'lucide-react'
 import { useTheme } from 'next-themes'
+import { useRouter } from 'next/navigation'
+import React from 'react'
+import { Sidebar } from './sidebar'
 
 interface DashboardLayoutProps {
   children: React.ReactNode
@@ -24,17 +24,27 @@ export function DashboardLayout({
   title,
   requiredRole,
 }: DashboardLayoutProps) {
-  const { isAuthenticated, user, logout } = useAuth()
+  const { isAuthenticated, isLoading, user, logout } = useAuth()
   const router = useRouter()
   const { theme, setTheme } = useTheme()
 
   React.useEffect(() => {
+    if (isLoading) return
+
     if (!isAuthenticated) {
       router.push('/login')
     } else if (requiredRole && user?.role !== requiredRole) {
       router.push('/')
     }
-  }, [isAuthenticated, user, requiredRole, router])
+  }, [isLoading, isAuthenticated, user, requiredRole, router])
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    )
+  }
 
   if (!isAuthenticated) {
     return null

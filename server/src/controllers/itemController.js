@@ -32,7 +32,10 @@ const reportLostItem = async (req, res, next) => {
 
     // req.files is populated by multer array middleware
     const files = req.files || [];
-    const images = await uploadItemImages(files);
+    let images = await uploadItemImages(files);
+    if (images.length === 0 && req.body.images) {
+      images = Array.isArray(req.body.images) ? req.body.images : [req.body.images];
+    }
 
     const item = new Item({
       title,
@@ -110,7 +113,10 @@ const reportFoundItem = async (req, res, next) => {
     }
 
     const files = req.files || [];
-    const images = await uploadItemImages(files);
+    let images = await uploadItemImages(files);
+    if (images.length === 0 && req.body.images) {
+      images = Array.isArray(req.body.images) ? req.body.images : [req.body.images];
+    }
 
     const item = new Item({
       title,
@@ -599,12 +605,76 @@ const getGlobalStats = async (req, res, next) => {
     const itemsRecovered = await Item.countDocuments({ status: "resolved" });
     const registeredUsers = await User.countDocuments();
 
+    const lostByCategoryRaw = await Item.aggregate([
+      { $match: { type: "lost" } },
+      { $group: { _id: "$category", count: { $sum: 1 } } }
+    ]);
+    const foundByCategoryRaw = await Item.aggregate([
+      { $match: { type: "found" } },
+      { $group: { _id: "$category", count: { $sum: 1 } } }
+    ]);
+    const matchesByCategoryRaw = await Item.aggregate([
+      { $match: { status: "matched" } },
+      { $group: { _id: "$category", count: { $sum: 1 } } }
+    ]);
+    const recoveredByCategoryRaw = await Item.aggregate([
+      { $match: { status: "resolved" } },
+      { $group: { _id: "$category", count: { $sum: 1 } } }
+    ]);
+
+    const mapCategoryToGroup = (cat) => {
+      if (!cat) return "Others";
+      const c = cat.toString().trim().toLowerCase();
+      if (c === "laptop" || c === "mobile" || c === "watch" || c === "headphones" || c === "electronics") {
+        return "Electronics";
+      }
+      if (c === "wallets" || c === "wallet" || c === "cash") {
+        return "Wallets";
+      }
+      if (c === "bags" || c === "bag" || c === "accessories" || c === "backpack") {
+        return "Accessories";
+      }
+      if (c === "id card" || c === "documents" || c === "document" || c === "id" || c === "books" || c === "book") {
+        return "Documents";
+      }
+      if (c === "keys" || c === "key" || c === "keychain") {
+        return "Keys";
+      }
+      if (c === "clothings" || c === "clothing" || c === "clothes" || c === "wearable") {
+        return "Clothing";
+      }
+      return "Others";
+    };
+
+    const formatCategoryMap = (rawList) => {
+      const map = {
+        Electronics: 0,
+        Wallets: 0,
+        Documents: 0,
+        Accessories: 0,
+        Clothing: 0,
+        Keys: 0,
+        Others: 0,
+      };
+      rawList.forEach((item) => {
+        if (item._id) {
+          const group = mapCategoryToGroup(item._id);
+          map[group] = (map[group] || 0) + item.count;
+        }
+      });
+      return map;
+    };
+
     return apiResponse(res, 200, true, "Global stats retrieved successfully!", {
       totalLostItems,
       totalFoundItems,
       totalMatches,
       itemsRecovered,
       registeredUsers,
+      lostByCategory: formatCategoryMap(lostByCategoryRaw),
+      foundByCategory: formatCategoryMap(foundByCategoryRaw),
+      matchesByCategory: formatCategoryMap(matchesByCategoryRaw),
+      recoveredByCategory: formatCategoryMap(recoveredByCategoryRaw),
     });
   } catch (error) {
     next(error);

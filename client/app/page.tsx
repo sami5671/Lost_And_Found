@@ -3,7 +3,6 @@ import { HeroSection } from '@/components/sections/hero'
 import { StatisticsSection } from '@/components/sections/statistics'
 import { FeaturesSection } from '@/components/sections/features'
 import { HowItWorksSection } from '@/components/sections/how-it-works'
-import { LatestItemsSection } from '@/components/sections/latest-items'
 import { Footer } from '@/components/footer'
 import { handleGetGlobalStats } from '@/actions/admin/item-actions'
 
@@ -25,7 +24,6 @@ export default async function Page() {
         <StatisticsSection initialStats={initialStats} />
         <FeaturesSection />
         <HowItWorksSection />
-        <LatestItemsSection />
       </main>
       <Footer />
     </>

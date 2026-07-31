@@ -33,6 +33,7 @@ export interface Item {
   userId: string
   contactEmail: string
   matchScore?: number
+  type?: 'lost' | 'found'
 }
 
 export interface LostItem extends Item {

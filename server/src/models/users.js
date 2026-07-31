@@ -72,12 +72,29 @@ const UserSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
+    studentId: {
+      type: String,
+      trim: true,
+    },
+    creditsCompleted: {
+      type: String,
+      trim: true,
+    },
+    bloodGroup: {
+      type: String,
+      trim: true,
+    },
     resetOTP: {
       type: String,
       trim: true,
     },
     resetOTPExpires: {
       type: Date,
+    },
+    status: {
+      type: String,
+      enum: ["Active", "Inactive"],
+      default: "Active",
     },
   },
   {
