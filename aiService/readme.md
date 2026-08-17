@@ -1,6 +1,6 @@
 # Lost & Found Local AI Service & Static Ngrok Tunnel Setup
 
-This directory contains the hybrid AI matching engine (combining DINOv2 visual embeddings, sentence-transformers text embeddings, EasyOCR, YOLO object detection, and color/date/location metadata scoring) for the Daffodil Lost & Found System.
+This directory contains the hybrid AI matching engine (combining OpenAI CLIP-Large openai/clip-vit-large-patch14 768-dim discriminative visual embeddings, sentence-transformers text embeddings, EasyOCR, YOLO object detection, and color/date/location metadata scoring) for the Daffodil Lost & Found System.
 
 ---
 
@@ -13,7 +13,7 @@ pip install -r requirements.txt
 ```
 
 ### 2. Download Pre-trained Models
-Run the pre-downloader script to cache DINOv2, all-MiniLM-L6-v2, and EasyOCR models locally:
+Run the pre-downloader script to cache OpenAI CLIP-Large, Google SigLIP, all-mpnet-base-v2, and EasyOCR models locally:
 ```bash
 python download_models.py
 ```

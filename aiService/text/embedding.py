@@ -19,28 +19,48 @@ class TextEmbedder:
         self.tokenizer = None
         self.transformer_model = None
         self.engine = None
+        self.embedding_dim = 768
 
         if HAS_SENTENCE_TRANSFORMERS:
             try:
-                self.model = SentenceTransformer("all-MiniLM-L6-v2")
+                model_name = "sentence-transformers/all-mpnet-base-v2"
+                self.model = SentenceTransformer(model_name)
                 self.engine = "sentence_transformers"
-                print("SentenceTransformers (all-MiniLM-L6-v2) loaded successfully!")
+                self.embedding_dim = self.model.get_sentence_embedding_dimension() or 768
+                print(f"SentenceTransformers ({model_name}) loaded successfully! (dim: {self.embedding_dim})")
             except Exception as e:
-                print(f"Failed to load SentenceTransformer: {e}")
+                print(f"Failed to load primary mpnet model: {e}. Falling back to all-MiniLM-L6-v2...")
+                try:
+                    self.model = SentenceTransformer("all-MiniLM-L6-v2")
+                    self.engine = "sentence_transformers"
+                    self.embedding_dim = 384
+                    print("SentenceTransformers (all-MiniLM-L6-v2) loaded successfully!")
+                except Exception as ex:
+                    print(f"Failed to load fallback SentenceTransformer: {ex}")
 
         if not self.engine and HAS_TRANSFORMERS:
             try:
-                model_name = "sentence-transformers/all-MiniLM-L6-v2"
+                model_name = "sentence-transformers/all-mpnet-base-v2"
                 self.tokenizer = AutoTokenizer.from_pretrained(model_name)
                 self.transformer_model = AutoModel.from_pretrained(model_name)
                 self.engine = "transformers"
-                print("Transformers (all-MiniLM-L6-v2) loaded successfully!")
+                self.embedding_dim = 768
+                print("Transformers (all-mpnet-base-v2) loaded successfully!")
             except Exception as e:
-                print(f"Failed to load Transformers MiniLM model: {e}")
+                print(f"Failed to load Transformers mpnet model: {e}. Trying MiniLM...")
+                try:
+                    model_name = "sentence-transformers/all-MiniLM-L6-v2"
+                    self.tokenizer = AutoTokenizer.from_pretrained(model_name)
+                    self.transformer_model = AutoModel.from_pretrained(model_name)
+                    self.engine = "transformers"
+                    self.embedding_dim = 384
+                    print("Transformers (all-MiniLM-L6-v2) loaded successfully!")
+                except Exception as ex:
+                    print(f"Failed to load Transformers model: {ex}")
 
     def get_text_embedding(self, text: str) -> list:
         if not text.strip():
-            return [0.0] * 384
+            return [0.0] * self.embedding_dim
             
         if self.engine == "sentence_transformers" and self.model:
             try:
@@ -73,12 +93,13 @@ class TextEmbedder:
         return self._simulate_text_embedding(text)
 
     def _simulate_text_embedding(self, text: str) -> list:
+        dim = getattr(self, "embedding_dim", 768)
         words = text.lower().split()
-        embedding = np.zeros(384)
+        embedding = np.zeros(dim)
         for i, word in enumerate(words):
             seed = sum(ord(c) for c in word)
             np.random.seed(seed)
-            embedding += np.random.randn(384)
+            embedding += np.random.randn(dim)
             
         norm = np.linalg.norm(embedding)
         if norm > 0:

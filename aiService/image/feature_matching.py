@@ -21,9 +21,18 @@ class FeatureMatcher:
             except Exception as e:
                 print(f"Failed to initialize OpenCV detectors: {e}")
 
+    @staticmethod
+    def compute_dhash(img, hash_size=8) -> int:
+        try:
+            resized = cv2.resize(img, (hash_size + 1, hash_size), interpolation=cv2.INTER_AREA)
+            diff = resized[:, 1:] > resized[:, :-1]
+            return sum([2 ** i for (i, v) in enumerate(diff.flatten()) if v])
+        except Exception:
+            return 0
+
     def compute_local_feature_score(self, img_path1: str, img_path2: str) -> float:
         """
-        Computes local texture similarity score using AKAZE, SIFT, or ORB.
+        Computes local texture similarity score using perceptual dHash, AKAZE, SIFT, or ORB.
         Returns a float between 0.0 and 1.0.
         """
         if not HAS_OPENCV or not os.path.exists(img_path1) or not os.path.exists(img_path2):
@@ -37,7 +46,16 @@ class FeatureMatcher:
             if img1 is None or img2 is None:
                 return 0.0
 
-            # Try AKAZE first
+            # 1. Perceptual dHash check for exact or near-identical images
+            h1 = self.compute_dhash(img1)
+            h2 = self.compute_dhash(img2)
+            hamming_dist = bin(h1 ^ h2).count('1')
+            if hamming_dist <= 6:
+                # Near-exact duplicate photo (0-6 bit difference out of 64)
+                perceptual_score = 1.0 - (hamming_dist / 64.0)
+                return float(max(0.90, perceptual_score))
+
+            # 2. Try AKAZE detector
             score = self._match_with_detector(self.akaze, img1, img2, norm_type=cv2.NORM_HAMMING)
             if score > 0.05:
                 return score

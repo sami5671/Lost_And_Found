@@ -55,7 +55,7 @@ def extract_features_hybrid(item: ItemModel) -> dict:
     combined_text = f"{title} {description} {category}"
     desc_embedding = text_embedder.get_text_embedding(combined_text)
     
-    # 2. Image-related features (process 1 primary image per item for speed)
+    # 2. Image-related features (process 1 primary image per item)
     image_embeddings = []
     visual_image_paths = []
     ocr_texts = []
@@ -69,25 +69,26 @@ def extract_features_hybrid(item: ItemModel) -> dict:
                 # Detect and crop object
                 cropped_path, labels = detector.detect_and_crop(local_path)
                 
-                if cropped_path and cropped_path != local_path:
-                    emb_path = cropped_path
-                    visual_image_paths.append(cropped_path)
-                    ImageProcessor.cleanup_image(local_path)
-                else:
-                    emb_path = local_path
-                    visual_image_paths.append(local_path)
+                paths_to_embed = [local_path]
+                visual_image_paths.append(local_path)
                 
-                # Image embedding
-                img_emb = image_embedder.get_image_embedding(emb_path)
-                if img_emb:
-                    image_embeddings.append(img_emb)
+                if cropped_path and cropped_path != local_path:
+                    paths_to_embed.append(cropped_path)
+                    visual_image_paths.append(cropped_path)
+                
+                # Image embedding for both full photo and cropped object
+                for p in paths_to_embed:
+                    img_emb = image_embedder.get_image_embedding(p)
+                    if img_emb:
+                        image_embeddings.append(img_emb)
                     
-                # Color detection
-                color_dist = ColorDetector.get_color_distribution(emb_path)
+                # Color detection on primary visual path
+                main_emb_path = cropped_path if (cropped_path and cropped_path != local_path) else local_path
+                color_dist = ColorDetector.get_color_distribution(main_emb_path)
                 colors.append(color_dist)
                 
                 # OCR extraction
-                extracted_ocr = ocr_processor.extract_text(emb_path)
+                extracted_ocr = ocr_processor.extract_text(main_emb_path)
                 if extracted_ocr:
                     ocr_texts.append(extracted_ocr)
                     serials = ocr_processor.find_serial_numbers(extracted_ocr)

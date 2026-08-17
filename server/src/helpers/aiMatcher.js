@@ -1,6 +1,7 @@
 const axios = require("axios");
 const Match = require("../models/matches");
 const Item = require("../models/items");
+const { sendOwnerNotification } = require("./emailService");
 
 const triggerAIMatching = async (newItem) => {
   try {
@@ -65,9 +66,9 @@ const triggerAIMatching = async (newItem) => {
       const matches = response.data.matches;
       console.log(`AI matching computed ${matches.length} scores.`);
       
-      // Save top matches with score >= 0.78 (78% confidence or above)
+      // Save top matches with score >= 0.65 (65% confidence or above)
       for (const m of matches) {
-        if (m.score >= 0.78) {
+        if (m.score >= 0.65) {
           const lostId = newItem.type === "lost" ? newItem._id : m.candidate_id;
           const foundId = newItem.type === "lost" ? m.candidate_id : newItem._id;
 
@@ -86,6 +87,24 @@ const triggerAIMatching = async (newItem) => {
               { _id: { $in: [lostId, foundId] }, status: "reported" },
               { status: "matched" }
             );
+
+            // Automatically send email notification to the lost item owner with claim instructions
+            try {
+              const lostItemRecord = await Item.findById(lostId).populate("reportedBy");
+              const foundItemRecord = await Item.findById(foundId);
+              if (lostItemRecord && lostItemRecord.reportedBy && lostItemRecord.reportedBy.email) {
+                const owner = lostItemRecord.reportedBy;
+                const ownerName = owner.fullName || owner.name || "DIU Student";
+                await sendOwnerNotification(
+                  owner.email,
+                  ownerName,
+                  lostItemRecord.title,
+                  foundItemRecord ? foundItemRecord.title : "Found Item"
+                );
+              }
+            } catch (emailErr) {
+              console.error("Failed sending automatic email notification to item owner:", emailErr.message);
+            }
           }
         }
       }

@@ -4,12 +4,12 @@ const { uploadToCloudinary } = require("../helpers/cloudinaryHelper");
 const { apiResponse } = require("../helpers");
 const { triggerAIMatching } = require("../helpers/aiMatcher");
 
-// Helper to stream upload files
+// Helper to stream upload files with automatic background removal
 const uploadItemImages = async (files) => {
   const urls = [];
   if (!files || files.length === 0) return urls;
   for (const file of files) {
-    const url = await uploadToCloudinary(file.buffer, file.originalname, "Items");
+    const url = await uploadToCloudinary(file.buffer, file.originalname, "Items", true);
     urls.push(url);
   }
   return urls;
@@ -67,8 +67,8 @@ const getMyStats = async (req, res, next) => {
     }
 
     const lostCount = await Item.countDocuments({ reportedBy: userId, type: "lost" });
-    const matchCount = await Item.countDocuments({ reportedBy: userId, status: "matched" });
-    const resolvedCount = await Item.countDocuments({ reportedBy: userId, status: "resolved" });
+    const matchCount = await Item.countDocuments({ reportedBy: userId, type: "lost", status: "matched" });
+    const resolvedCount = await Item.countDocuments({ reportedBy: userId, type: "lost", status: "resolved" });
 
     const total = lostCount + resolvedCount;
     const successRate = total > 0 ? Math.round((resolvedCount / total) * 100) : 0;
@@ -153,8 +153,8 @@ const getAdminStats = async (req, res, next) => {
   try {
     const totalLostItems = await Item.countDocuments({ type: "lost" });
     const totalFoundItems = await Item.countDocuments({ type: "found" });
-    const totalMatches = await Item.countDocuments({ status: "matched" });
-    const itemsRecovered = await Item.countDocuments({ status: "resolved" });
+    const totalMatches = await Item.countDocuments({ type: "lost", status: "matched" });
+    const itemsRecovered = await Item.countDocuments({ type: "lost", status: "resolved" });
     const activeUsers = await User.countDocuments();
     const totalItems = totalLostItems + totalFoundItems;
 
@@ -226,15 +226,29 @@ const getMatches = async (req, res, next) => {
     const role = req.decoded && req.decoded.role;
 
     let matches = await Match.find({})
-      .populate("lostItemId")
-      .populate("foundItemId")
+      .populate({
+        path: "lostItemId",
+        populate: { path: "reportedBy", select: "name fullName email phone contactInfo studentId" }
+      })
+      .populate({
+        path: "foundItemId",
+        populate: { path: "reportedBy", select: "name fullName email phone contactInfo studentId" }
+      })
+      .populate({
+        path: "claimedBy",
+        select: "name fullName email phone contactInfo"
+      })
       .sort({ createdAt: -1 });
 
     if (role !== "admin") {
       // Filter matches to only include the student's items
       matches = matches.filter(m => {
-        const lostReportedBy = m.lostItemId && m.lostItemId.reportedBy && m.lostItemId.reportedBy.toString();
-        const foundReportedBy = m.foundItemId && m.foundItemId.reportedBy && m.foundItemId.reportedBy.toString();
+        const getReportedById = (item) => {
+          if (!item || !item.reportedBy) return null;
+          return item.reportedBy._id ? item.reportedBy._id.toString() : item.reportedBy.toString();
+        };
+        const lostReportedBy = getReportedById(m.lostItemId);
+        const foundReportedBy = getReportedById(m.foundItemId);
         return lostReportedBy === userId || foundReportedBy === userId;
       });
     }
@@ -395,10 +409,10 @@ const verifyOwner = async (req, res, next) => {
         }).sort((a, b) => b.score - a.score);
       }
 
-      // 4. Select best candidate (similarity must be >= 0.78)
+      // 4. Select best candidate (similarity must be >= 0.65)
       const bestMatch = matches[0];
-      if (!bestMatch || bestMatch.score < 0.78) {
-        return apiResponse(res, 404, false, "AI could not identify a confident matching owner (similarity score below 78%).");
+      if (!bestMatch || bestMatch.score < 0.65) {
+        return apiResponse(res, 404, false, "AI could not identify a confident matching owner (similarity score below 65%).");
       }
 
       matchingLostItemId = bestMatch.candidate_id;
@@ -601,8 +615,8 @@ const getGlobalStats = async (req, res, next) => {
   try {
     const totalLostItems = await Item.countDocuments({ type: "lost" });
     const totalFoundItems = await Item.countDocuments({ type: "found" });
-    const totalMatches = await Item.countDocuments({ status: "matched" });
-    const itemsRecovered = await Item.countDocuments({ status: "resolved" });
+    const totalMatches = await Item.countDocuments({ type: "lost", status: "matched" });
+    const itemsRecovered = await Item.countDocuments({ type: "lost", status: "resolved" });
     const registeredUsers = await User.countDocuments();
 
     const lostByCategoryRaw = await Item.aggregate([
@@ -614,11 +628,11 @@ const getGlobalStats = async (req, res, next) => {
       { $group: { _id: "$category", count: { $sum: 1 } } }
     ]);
     const matchesByCategoryRaw = await Item.aggregate([
-      { $match: { status: "matched" } },
+      { $match: { type: "lost", status: "matched" } },
       { $group: { _id: "$category", count: { $sum: 1 } } }
     ]);
     const recoveredByCategoryRaw = await Item.aggregate([
-      { $match: { status: "resolved" } },
+      { $match: { type: "lost", status: "resolved" } },
       { $group: { _id: "$category", count: { $sum: 1 } } }
     ]);
 
@@ -681,6 +695,28 @@ const getGlobalStats = async (req, res, next) => {
   }
 };
 
+const claimMatch = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const userId = req.decoded && req.decoded.id;
+    const Match = require("../models/matches");
+
+    const match = await Match.findById(id);
+    if (!match) {
+      return apiResponse(res, 404, false, "Match record not found!");
+    }
+
+    match.status = "claimed";
+    match.claimedBy = userId;
+    match.claimedAt = new Date();
+    await match.save();
+
+    return apiResponse(res, 200, true, "Item match successfully claimed!", match);
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   reportLostItem,
   getMyStats,
@@ -694,5 +730,6 @@ module.exports = {
   verifyOwner,
   checkOwnerMatch,
   getGlobalStats,
+  claimMatch,
 };
 

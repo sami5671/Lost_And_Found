@@ -6,20 +6,40 @@ const cloudinary = require("../configs/cloudinary");
  * @param {string} originalName - The original name of the uploaded file.
  * @returns {Promise<string>} - The secure URL of the uploaded image.
  */
-const uploadToCloudinary = (fileBuffer, originalName, folder = "ID_Cards") => {
+const uploadToCloudinary = (fileBuffer, originalName, folder = "ID_Cards", removeBg = false) => {
   return new Promise((resolve, reject) => {
     // Strip extension to create a clean public ID
     const baseName = originalName.split(".").slice(0, -1).join(".");
     const cleanPublicId = `${Date.now()}_${baseName.replace(/[^a-zA-Z0-9]/g, "_")}`;
 
+    const options = {
+      folder: folder,
+      public_id: cleanPublicId,
+      resource_type: "auto",
+    };
+
+    if (removeBg || folder === "Items") {
+      // Cloudinary AI background removal add-on parameter
+      options.background_removal = "cloudinary_ai";
+    }
+
     const uploadStream = cloudinary.uploader.upload_stream(
-      {
-        folder: folder,
-        public_id: cleanPublicId,
-        resource_type: "auto",
-      },
+      options,
       (error, result) => {
         if (error) {
+          // Fall back gracefully if account does not have background_removal add-on enabled
+          if (options.background_removal) {
+            console.warn("Cloudinary AI background removal add-on unavailable, falling back to standard upload:", error.message || error);
+            delete options.background_removal;
+            const fallbackStream = cloudinary.uploader.upload_stream(options, (err2, res2) => {
+              if (err2) {
+                console.error("Cloudinary upload error:", err2);
+                return reject(err2);
+              }
+              resolve(res2.secure_url);
+            });
+            return fallbackStream.end(fileBuffer);
+          }
           console.error("Cloudinary upload error:", error);
           return reject(error);
         }

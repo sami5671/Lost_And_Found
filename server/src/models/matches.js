@@ -18,8 +18,15 @@ const MatchSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["pending", "verified", "dismissed"],
+      enum: ["pending", "claimed", "verified", "dismissed"],
       default: "pending",
+    },
+    claimedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
+    claimedAt: {
+      type: Date,
     },
   },
   {

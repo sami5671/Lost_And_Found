@@ -3,15 +3,16 @@
 import React, { useState, useEffect } from 'react'
 import { DashboardLayout } from '@/components/dashboard-layout'
 import { GlassCard } from '@/components/glass-card'
-import { Heart, Bell, CheckCircle2, Plus, BarChart3, ArrowRight } from 'lucide-react'
+import { Heart, Bell, CheckCircle2, Plus, BarChart3, ArrowRight, Check } from 'lucide-react'
 import { motion } from 'framer-motion'
-import { handleGetMatches } from '@/actions/admin/match-actions'
+import { handleGetMatches, handleClaimMatch } from '@/actions/admin/match-actions'
 import { useAuth } from '@/lib/auth-context'
 
 export default function StudentMatchesPage() {
   const { user } = useAuth()
   const [matches, setMatches] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [claimingId, setClaimingId] = useState<string | null>(null)
 
   const sidebarItems = [
     { label: 'Dashboard', href: '/dashboard', icon: <BarChart3 className="w-5 h-5" /> },
@@ -40,6 +41,23 @@ export default function StudentMatchesPage() {
       loadMatches()
     }
   }, [user])
+
+  const handleClaim = async (matchId: string) => {
+    setClaimingId(matchId)
+    try {
+      const res = await handleClaimMatch(matchId)
+      if (res.status) {
+        setMatches(prev => prev.map(m => (m._id === matchId || m.id === matchId) ? { ...m, status: 'claimed' } : m))
+        alert('Success! Your item claim has been submitted. Administration will review your claim.')
+      } else {
+        alert(res.error || 'Failed to submit claim.')
+      }
+    } catch (err) {
+      console.error('Error claiming match:', err)
+    } finally {
+      setClaimingId(null)
+    }
+  }
 
   return (
     <DashboardLayout
@@ -140,26 +158,46 @@ export default function StudentMatchesPage() {
                         </div>
                       </div>
 
-                      {/* Status Check */}
-                      <div className="w-full lg:w-40 flex flex-col items-center lg:items-end justify-center">
-                        <span className={`text-xs font-semibold capitalize px-3 py-1 rounded-full ${
+                      {/* Status Check & Action */}
+                      <div className="w-full lg:w-48 flex flex-col items-center lg:items-end justify-center gap-2">
+                        <span className={`text-xs font-semibold capitalize px-3 py-1 rounded-full text-center ${
                           match.status === 'verified'
                             ? 'bg-green-500/20 text-green-300 border border-green-500/30'
+                            : match.status === 'claimed'
+                            ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
                             : match.status === 'dismissed'
                             ? 'bg-red-500/20 text-red-300 border border-red-500/30'
                             : 'bg-yellow-500/20 text-yellow-300 border border-yellow-500/30'
                         }`}>
-                          {match.status === 'verified' ? 'Verified Match' : match.status === 'pending' ? 'Under Review' : 'Dismissed'}
+                          {match.status === 'verified'
+                            ? 'Verified Match'
+                            : match.status === 'claimed'
+                            ? 'Claimed (Under Verification)'
+                            : match.status === 'pending'
+                            ? 'Pending Claim'
+                            : 'Dismissed'}
                         </span>
+
+                        {match.status === 'pending' && (
+                          <button
+                            disabled={claimingId === matchId}
+                            onClick={() => handleClaim(matchId)}
+                            className="w-full px-4 py-2 text-xs font-bold text-white bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 rounded-lg shadow-md hover:scale-[1.02] disabled:opacity-50 transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                          >
+                            <Check className="w-3.5 h-3.5" />
+                            {claimingId === matchId ? 'Claiming...' : 'Claim This Item'}
+                          </button>
+                        )}
                         
-                        {match.status === 'verified' && (
-                          <p className="text-[10px] text-green-400 text-center lg:text-right mt-1.5 font-medium leading-tight">
-                            Claim verified! Please visit the office to complete handover.
+                        {match.status === 'claimed' && (
+                          <p className="text-[10px] text-emerald-400 text-center lg:text-right font-medium leading-tight">
+                            Claimed by you! Admin is verifying.
                           </p>
                         )}
-                        {match.status === 'pending' && (
-                          <p className="text-[10px] text-foreground/40 text-center lg:text-right mt-1.5 font-medium leading-tight">
-                            Awaiting admin verification check.
+
+                        {match.status === 'verified' && (
+                          <p className="text-[10px] text-green-400 text-center lg:text-right font-medium leading-tight">
+                            Claim verified! Visit office to complete handover.
                           </p>
                         )}
                       </div>

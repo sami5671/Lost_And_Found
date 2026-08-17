@@ -249,7 +249,7 @@ export default function AdminFoundItemsPage() {
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="relative w-full max-w-lg bg-white dark:bg-[#0c1a30] border border-emerald-500/30 dark:border-emerald-500/20 rounded-2xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh] z-10"
+              className="relative w-full max-w-2xl bg-white dark:bg-[#0c1a30] border border-emerald-500/30 dark:border-emerald-500/20 rounded-2xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh] z-10"
             >
               {/* Header */}
               <div className="flex items-center justify-between px-6 py-5 border-b border-slate-200 dark:border-emerald-500/20 bg-slate-50 dark:bg-emerald-950/30">
@@ -277,7 +277,7 @@ export default function AdminFoundItemsPage() {
                   <span className="text-xs font-extrabold text-emerald-700 dark:text-emerald-300 uppercase tracking-wider mb-1">AI Match Score</span>
                   <div className="flex items-baseline gap-1 my-1">
                     <span className={`text-5xl font-extrabold tracking-tight ${
-                      matchData.score >= 0.78 
+                      matchData.score >= 0.65 
                         ? 'text-emerald-600 dark:text-emerald-400 drop-shadow-[0_0_20px_rgba(16,185,129,0.35)]' 
                         : 'text-amber-600 dark:text-yellow-400 drop-shadow-[0_0_20px_rgba(245,158,11,0.35)]'
                     }`}>
@@ -285,12 +285,97 @@ export default function AdminFoundItemsPage() {
                     </span>
                   </div>
                   <span className={`text-xs mt-2 px-3.5 py-1.5 rounded-full border font-bold uppercase tracking-wide ${
-                    matchData.score >= 0.78
+                    matchData.score >= 0.65
                       ? 'bg-emerald-500/15 border-emerald-500/30 text-emerald-700 dark:text-emerald-300'
                       : 'bg-amber-500/15 border-amber-500/30 text-amber-700 dark:text-yellow-400'
                   }`}>
-                    {matchData.score >= 0.78 ? 'High Confidence (Match Verified)' : 'Moderate Confidence (Review Suggested)'}
+                    {matchData.score >= 0.65 ? 'High Confidence (Match Verified)' : 'Moderate Confidence (Review Suggested)'}
                   </span>
+                </div>
+
+                {/* Matched Items Side-by-Side Comparison */}
+                <div className="space-y-3">
+                  <h5 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                    <Package className="w-4 h-4 text-emerald-500" />
+                    Matched Items Comparison
+                  </h5>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {/* Found Item Card */}
+                    <div className="p-4 rounded-2xl border border-slate-200 dark:border-emerald-500/20 bg-slate-50/70 dark:bg-emerald-950/20 space-y-3 flex flex-col justify-between">
+                      <div>
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-[10px] font-extrabold uppercase px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30">
+                            Found Item
+                          </span>
+                        </div>
+                        {matchData.foundItem.images && matchData.foundItem.images.length > 0 ? (
+                          <img
+                            src={matchData.foundItem.images[0]}
+                            alt={matchData.foundItem.title}
+                            className="w-full h-32 object-cover rounded-xl border border-slate-200 dark:border-white/10 mb-3"
+                          />
+                        ) : (
+                          <div className="w-full h-32 bg-slate-200 dark:bg-slate-800 rounded-xl flex items-center justify-center text-slate-400 mb-3 text-xs">
+                            No Image Available
+                          </div>
+                        )}
+                        <h6 className="font-bold text-slate-900 dark:text-white text-sm line-clamp-1">
+                          {matchData.foundItem.title}
+                        </h6>
+                        <p className="text-xs text-slate-600 dark:text-slate-400 line-clamp-2 mt-1">
+                          {matchData.foundItem.description}
+                        </p>
+                      </div>
+                      <div className="pt-2.5 border-t border-slate-200 dark:border-white/10 space-y-1 text-xs text-slate-500 dark:text-slate-400">
+                        <div className="flex items-center gap-1.5">
+                          <MapPin className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                          <span className="truncate">{matchData.foundItem.location || 'Unknown location'}</span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <Calendar className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                          <span>{matchData.foundItem.date ? new Date(matchData.foundItem.date).toLocaleDateString() : 'N/A'}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Matched Lost Item Card */}
+                    <div className="p-4 rounded-2xl border border-slate-200 dark:border-emerald-500/20 bg-slate-50/70 dark:bg-emerald-950/20 space-y-3 flex flex-col justify-between">
+                      <div>
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-[10px] font-extrabold uppercase px-2.5 py-0.5 rounded-full bg-blue-500/15 text-blue-700 dark:text-blue-300 border border-blue-500/30">
+                            Matched Lost Item
+                          </span>
+                        </div>
+                        {matchData.matchedItem.images && matchData.matchedItem.images.length > 0 ? (
+                          <img
+                            src={matchData.matchedItem.images[0]}
+                            alt={matchData.matchedItem.title}
+                            className="w-full h-32 object-cover rounded-xl border border-slate-200 dark:border-white/10 mb-3"
+                          />
+                        ) : (
+                          <div className="w-full h-32 bg-slate-200 dark:bg-slate-800 rounded-xl flex items-center justify-center text-slate-400 mb-3 text-xs">
+                            No Image Available
+                          </div>
+                        )}
+                        <h6 className="font-bold text-slate-900 dark:text-white text-sm line-clamp-1">
+                          {matchData.matchedItem.title}
+                        </h6>
+                        <p className="text-xs text-slate-600 dark:text-slate-400 line-clamp-2 mt-1">
+                          {matchData.matchedItem.description}
+                        </p>
+                      </div>
+                      <div className="pt-2.5 border-t border-slate-200 dark:border-white/10 space-y-1 text-xs text-slate-500 dark:text-slate-400">
+                        <div className="flex items-center gap-1.5">
+                          <MapPin className="w-3.5 h-3.5 text-blue-500 shrink-0" />
+                          <span className="truncate">{matchData.matchedItem.location || 'Unknown location'}</span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <Calendar className="w-3.5 h-3.5 text-blue-500 shrink-0" />
+                          <span>{matchData.matchedItem.date ? new Date(matchData.matchedItem.date).toLocaleDateString() : 'N/A'}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
                 {/* Owner Information */}

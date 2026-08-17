@@ -87,6 +87,10 @@ class ScoringPipeline:
         target_desc_emb = target.get("description_embedding")
         candidate_desc_emb = candidate.get("description_embedding")
         
+        t_title_words = set(re.findall(r'\b\w{2,}\b', target.get('title', '').lower()))
+        c_title_words = set(re.findall(r'\b\w{2,}\b', candidate.get('title', '').lower()))
+        title_jaccard = len(t_title_words.intersection(c_title_words)) / len(t_title_words.union(c_title_words)) if (t_title_words and c_title_words) else 0.0
+
         t_words = set(re.findall(r'\b\w{2,}\b', f"{target.get('title', '')} {target.get('description', '')}".lower()))
         c_words = set(re.findall(r'\b\w{2,}\b', f"{candidate.get('title', '')} {candidate.get('description', '')}".lower()))
         
@@ -96,14 +100,16 @@ class ScoringPipeline:
             union = t_words.union(c_words)
             jaccard_sim = len(intersection) / len(union) if union else 0.0
             
+        text_sim_composite = 0.60 * jaccard_sim + 0.40 * title_jaccard
         if target_desc_emb and candidate_desc_emb:
             emb_sim = TextSimilarity.cosine_similarity(target_desc_emb, candidate_desc_emb)
-            scores["description_embedding"] = 0.70 * emb_sim + 0.30 * jaccard_sim
+            scores["description_embedding"] = 0.65 * emb_sim + 0.35 * text_sim_composite
         else:
-            scores["description_embedding"] = jaccard_sim
+            scores["description_embedding"] = text_sim_composite
 
         # Image-related features (if images exist on both sides)
         has_images = False
+        has_ocr_data = False
         target_img_embs = target.get("image_embeddings", [])
         candidate_img_embs = candidate.get("image_embeddings", [])
         
@@ -118,6 +124,9 @@ class ScoringPipeline:
                     sim = ImageSimilarity.cosine_similarity(t_emb, c_emb)
                     if sim > img_similarity:
                         img_similarity = sim
+
+            # Calibrate cosine similarity for sharp discrimination using exponential power contrast
+            calibrated_img_sim = float(max(0.0, img_similarity) ** 3.5)
                         
             # Feature matching using visual image paths (either cropped or original kept alive)
             t_paths = target.get("visual_image_paths", [])
@@ -130,9 +139,9 @@ class ScoringPipeline:
                             feature_similarity = f_sim
                             
             if feature_similarity > 0.0:
-                scores["image_embedding"] = 0.8 * img_similarity + 0.2 * feature_similarity
+                scores["image_embedding"] = 0.8 * calibrated_img_sim + 0.2 * feature_similarity
             else:
-                scores["image_embedding"] = img_similarity
+                scores["image_embedding"] = calibrated_img_sim
                 
             # OCR Text (20%)
             t_ocr = target.get("ocr_text", "")
@@ -140,6 +149,7 @@ class ScoringPipeline:
             t_ocr_words = set(t_ocr.lower().split())
             c_ocr_words = set(c_ocr.lower().split())
             if t_ocr_words or c_ocr_words:
+                has_ocr_data = True
                 intersection = t_ocr_words.intersection(c_ocr_words)
                 union = t_ocr_words.union(c_ocr_words)
                 scores["ocr_text"] = len(intersection) / len(union) if union else 0.0
@@ -158,11 +168,13 @@ class ScoringPipeline:
                             color_similarity = sim
             scores["color"] = color_similarity
 
-        # If no images, redistribute weights among non-image features
+        # Filter active weights so missing OCR text or missing images do not penalize matching score
         active_weights = {}
         total_active_weight = 0.0
         for key, weight in weights.items():
             if not has_images and key in ["image_embedding", "ocr_text", "color"]:
+                continue
+            if key == "ocr_text" and not has_ocr_data:
                 continue
             active_weights[key] = weight
             total_active_weight += weight

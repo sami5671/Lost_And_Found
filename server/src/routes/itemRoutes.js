@@ -12,7 +12,8 @@ const {
   dismissMatch,
   verifyOwner,
   checkOwnerMatch,
-  getGlobalStats
+  getGlobalStats,
+  claimMatch
 } = require("../controllers/itemController");
 const { verifyToken } = require("../middlewares/authMiddlewares");
 const upload = require("../middlewares/uploadMiddleware");
@@ -41,6 +42,7 @@ router.get("/items/global-stats", getGlobalStats);
 router.get("/items/matches", verifyToken, getMatches);
 router.patch("/items/matches/:id/approve", verifyToken, approveMatch);
 router.patch("/items/matches/:id/dismiss", verifyToken, dismissMatch);
+router.patch("/items/matches/:id/claim", verifyToken, claimMatch);
 router.post("/items/found/:id/verify-owner", verifyToken, verifyOwner);
 router.get("/items/found/:id/check-match", verifyToken, checkOwnerMatch);
 

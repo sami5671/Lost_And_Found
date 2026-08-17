@@ -70,10 +70,18 @@ const sendOwnerNotification = async (ownerEmail, ownerName, lostItemTitle, found
           
           <div style="background: rgba(30, 41, 59, 0.7); padding: 18px; border-radius: 12px; border-left: 4px solid #818cf8; margin-bottom: 20px;">
             <p style="margin: 0 0 8px 0; font-size: 14px; color: #f8fafc;">📦 <strong>Your Lost Item:</strong> ${lostItemTitle}</p>
-            <p style="margin: 0; font-size: 14px; color: #38bdf8;">✨ <strong>Matched Found Item:</strong> ${foundItemTitle}</p>
+            <p style="margin: 0 0 14px 0; font-size: 14px; color: #38bdf8;">✨ <strong>Matched Found Item:</strong> ${foundItemTitle}</p>
+            
+            <div style="border-top: 1px solid #334155; padding-top: 12px; margin-top: 12px;">
+              <p style="margin: 0 0 8px 0; font-size: 14px; font-weight: 700; color: #f8fafc;">📋 Instructions to claim your item:</p>
+              <ol style="margin: 0; padding-left: 20px; font-size: 13px; color: #cbd5e1; line-height: 1.8;">
+                <li>Login into the account</li>
+                <li>Go to dashboard match section and claim it</li>
+              </ol>
+            </div>
           </div>
           
-          <p style="font-size: 14px; line-height: 1.6; color: #cbd5e1;">Please log into your Lost & Found dashboard or visit the office to complete the item verification and retrieval process.</p>
+          <p style="font-size: 14px; line-height: 1.6; color: #cbd5e1;">Follow the instructions above to submit your claim. Once claimed, our administration team will verify and finalize the handover.</p>
         </div>
 
         <div style="text-align: center; padding-top: 20px; border-top: 1px solid #1e293b; font-size: 12px; color: #64748b;">

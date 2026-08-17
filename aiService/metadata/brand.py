@@ -24,6 +24,14 @@ class BrandMatcher:
             pattern = r'\b' + re.escape(brand) + r'\b'
             if re.search(pattern, text_lower):
                 return brand
+                
+        # Dynamic fallback: extract distinct capitalized or non-generic model terms
+        words = re.findall(r'\b[A-Za-z0-9]{3,}\b', text)
+        stop_words = {"lost", "found", "near", "with", "from", "that", "this", "black", "white", "blue", "red", "watch", "phone", "bag", "laptop", "card", "keys", "wallet", "item", "some", "someone", "here", "cafeteria", "library", "hall", "campus", "building"}
+        candidate_terms = [w.lower() for w in words if w.lower() not in stop_words and not w.isdigit()]
+        if candidate_terms:
+            return candidate_terms[0]
+            
         return None
 
     @staticmethod
