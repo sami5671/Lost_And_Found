@@ -5,6 +5,7 @@ import { ThemeProvider } from 'next-themes'
 import { AuthProvider } from '@/lib/auth-context'
 import { LoadingProvider } from '@/lib/loading-context'
 import { LoadingScreen } from '@/components/loading-screen'
+import { AiMatchModal } from '@/components/ai-match-modal'
 import './globals.css'
 
 const geistSans = Geist({ variable: '--font-geist-sans', subsets: ['latin'] })
@@ -54,6 +55,7 @@ export default function RootLayout({
       <body className="bg-background text-foreground antialiased">
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
           <AuthProvider>
+            <AiMatchModal />
             <LoadingProvider>
               {children}
               <LoadingScreen />

@@ -171,7 +171,7 @@ export default function RegisterPage() {
       fd.append('avatar', avatarFile, 'avatar.jpg')
 
       await register(fd)
-      router.push('/dashboard')
+      router.push('/')
     } catch (err) {
       setError(
         err instanceof Error

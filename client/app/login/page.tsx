@@ -29,7 +29,7 @@ export default function LoginPage() {
       if (user.role === 'admin' || user.role === 'moderator') {
         router.push('/admin/dashboard')
       } else {
-        router.push('/dashboard')
+        router.push('/')
       }
     } catch (err) {
       setError(
