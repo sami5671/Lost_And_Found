@@ -116,8 +116,8 @@ export default function ForgotPasswordPage() {
               <>
                 {/* Header */}
                 <div className="text-center mb-6">
-                  <div className="w-12 h-12 bg-blue-500/10 text-blue-500 rounded-2xl flex items-center justify-center mx-auto mb-3 border border-blue-500/20">
-                    {step === 1 ? <Mail className="w-6 h-6" /> : <ShieldCheck className="w-6 h-6" />}
+                  <div className="flex justify-center mb-3">
+                    <img src="/logo.png" alt="Lost & Found Logo" className="w-14 h-14 object-contain" />
                   </div>
                   <h1 className="text-2xl font-bold text-slate-900 dark:text-white mb-1">
                     {step === 1 ? 'Forgot Password?' : 'Reset Your Password'}

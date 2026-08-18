@@ -16,10 +16,8 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
           {/* Brand */}
           <div>
-            <div className="flex items-center gap-2 text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-green-600 mb-4">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-blue-600 to-green-600 flex items-center justify-center text-white font-bold">
-                ✦
-              </div>
+            <div className="flex items-center gap-2.5 text-xl font-bold mb-4">
+              <img src="/logo.png" alt="Lost & Found Logo" className="w-9 h-9 object-contain" />
               <span className="text-foreground">Lost & Found</span>
             </div>
             <p className="text-slate-500 dark:text-slate-400 text-sm">

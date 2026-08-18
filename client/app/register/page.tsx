@@ -200,6 +200,9 @@ export default function RegisterPage() {
           <GlassCard className="p-8">
             {/* Header */}
             <div className="text-center mb-10">
+              <div className="flex justify-center mb-4">
+                <img src="/logo.png" alt="Lost & Found Logo" className="w-16 h-16 object-contain" />
+              </div>
               <h1 className="text-4xl font-extrabold mb-3 bg-gradient-to-r from-[#004b87] to-[#16a34a] bg-clip-text text-transparent">
                 Create Your Account
               </h1>

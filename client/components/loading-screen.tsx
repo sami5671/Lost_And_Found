@@ -54,13 +54,11 @@ export function LoadingScreen() {
 
               {/* Inner Pulsing Core */}
               <motion.div
-                className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#004b87] to-[#16a34a] flex items-center justify-center shadow-lg"
+                className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#004b87] to-[#16a34a] flex items-center justify-center shadow-lg p-1.5"
                 animate={{ scale: [0.9, 1.1, 0.9], opacity: [0.8, 1, 0.8] }}
                 transition={{ repeat: Infinity, duration: 2, ease: 'easeInOut' }}
               >
-                <div className="w-6 h-6 rounded-md bg-white/20 backdrop-blur-sm flex items-center justify-center text-[10px] font-bold text-white tracking-widest">
-                  ✦
-                </div>
+                <img src="/logo.png" alt="Loading Logo" className="w-full h-full object-contain" />
               </motion.div>
             </div>
 

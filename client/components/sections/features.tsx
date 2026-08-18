@@ -17,11 +17,11 @@ export function FeaturesSection() {
       >
         <div className="text-center mb-12">
           <h2 className="text-4xl md:text-5xl font-bold mb-4">
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-green-600">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#004b87] via-[#0060ad] to-[#16a34a] dark:from-blue-400 dark:via-sky-400 dark:to-emerald-400">
               Powerful Features
             </span>
           </h2>
-          <p className="text-foreground/60 text-lg">
+          <p className="text-muted-foreground text-lg">
             Everything you need to recover your lost items
           </p>
         </div>

@@ -4,13 +4,14 @@ import React, { useState } from 'react'
 import Link from 'next/link'
 import { useTheme } from 'next-themes'
 import { useAuth } from '@/lib/auth-context'
-import { Moon, Sun, LogOut, User, Menu, X } from 'lucide-react'
+import { Moon, Sun, LogOut, Menu, X } from 'lucide-react'
 import { GradientButton } from './gradient-button'
 
 export function Navbar() {
   const { theme, setTheme } = useTheme()
   const { user, logout, isAuthenticated } = useAuth()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+
   const dashboardHref = user?.role === 'admin' ? '/admin/dashboard' : '/dashboard'
 
   return (
@@ -18,30 +19,20 @@ export function Navbar() {
       <div className="bg-background/80 backdrop-blur-md border-b border-border">
         <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2 text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#004b87] to-[#16a34a]">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-[#004b87] to-[#16a34a] flex items-center justify-center text-white font-bold">
-              ✦
-            </div>
+          <Link href="/" className="flex items-center gap-2.5 text-xl font-bold">
+            <img src="/logo.png" alt="Lost & Found Logo" className="w-9 h-9 object-contain" />
             <span className="hidden sm:inline text-foreground">Lost & Found</span>
           </Link>
 
           {/* Desktop Menu */}
           <div className="hidden md:flex items-center gap-2">
-            <Link
-              href="/"
-              className="text-foreground/70 hover:text-foreground transition-colors px-3 py-2"
-            >
-              Home
-            </Link>
             {isAuthenticated && (
-              <>
-                <Link
-                  href={dashboardHref}
-                  className="text-foreground/70 hover:text-foreground transition-colors px-3 py-2"
-                >
-                  Dashboard
-                </Link>
-              </>
+              <Link
+                href={dashboardHref}
+                className="text-foreground/70 hover:text-foreground transition-colors px-3 py-2 font-medium"
+              >
+                Dashboard
+              </Link>
             )}
           </div>
 
@@ -106,12 +97,6 @@ export function Navbar() {
         {/* Mobile Menu */}
         {mobileMenuOpen && (
           <div className="md:hidden border-t border-border p-4 space-y-3">
-            <Link
-              href="/"
-              className="block text-foreground/70 hover:text-foreground transition-colors"
-            >
-              Home
-            </Link>
             {isAuthenticated && (
               <Link
                 href={dashboardHref}

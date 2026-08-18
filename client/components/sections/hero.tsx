@@ -1,14 +1,27 @@
 'use client'
 
+import { useAuth } from '@/lib/auth-context'
 import { motion } from 'framer-motion'
-import { Plus, Search } from 'lucide-react'
+import { LucideLayoutDashboard, Plus, ShieldAlert } from 'lucide-react'
 import Link from 'next/link'
 import { GradientButton } from '../gradient-button'
-import { useAuth } from '@/lib/auth-context'
 
 export function HeroSection() {
-  const { isAuthenticated } = useAuth()
-  const reportHref = isAuthenticated ? '/report' : '/login'
+  const { user, isAuthenticated } = useAuth()
+  const isAdmin = user?.role === 'admin' || user?.role === 'moderator'
+
+  const primaryHref = isAdmin
+    ? '/admin/found-items/add'
+    : isAuthenticated
+    ? '/report'
+    : '/login'
+
+  const secondaryHref = isAdmin
+    ? '/admin/dashboard'
+    : isAuthenticated
+    ? '/dashboard'
+    : '/login'
+
   const container = {
     hidden: { opacity: 0 },
     visible: {
@@ -30,7 +43,7 @@ export function HeroSection() {
   }
 
   return (
-    <section className="relative pt-32 pb-20 px-4 overflow-hidden">
+    <section className="relative mt-44 pb-20 px-4 overflow-hidden">
       {/* Background Elements */}
       <div className="absolute inset-0 -z-10 overflow-hidden">
         <div className="absolute top-20 right-1/3 w-96 h-96 bg-[#004b87]/15 rounded-full blur-3xl opacity-10"></div>
@@ -67,22 +80,19 @@ export function HeroSection() {
 
         {/* CTA Buttons */}
         <motion.div variants={item} className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
-          <Link href={reportHref}>
-            <GradientButton size="lg" className="gap-2">
+          <Link href={primaryHref}>
+            <GradientButton size="lg" className="gap-2 flex items-center">
               <Plus className="w-5 h-5" />
-              Report Lost Item
+              {isAdmin ? 'Add Found Item' : 'Report Lost Item'}
             </GradientButton>
           </Link>
-          <Link href={isAuthenticated ? "/dashboard" : "/login"}>
-            <GradientButton variant="secondary" size="lg" className="gap-2">
-              <Search className="w-5 h-5" />
-              Browse Found Items
+          <Link href={secondaryHref}>
+            <GradientButton variant="secondary" size="lg" className="gap-2 flex items-center">
+              {isAdmin ? <ShieldAlert className="w-5 h-5" /> : <LucideLayoutDashboard className="w-5 h-5" />}
+              {isAdmin ? 'Admin Dashboard' : 'Dashboard'}
             </GradientButton>
           </Link>
         </motion.div>
-
-        {/* Hero Illustration */}
-      
       </motion.div>
     </section>
   )

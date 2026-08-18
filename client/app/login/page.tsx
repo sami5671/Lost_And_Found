@@ -59,6 +59,9 @@ export default function LoginPage() {
           <GlassCard className="p-8">
             {/* Header */}
             <div className="text-center mb-8">
+              <div className="flex justify-center mb-4">
+                <img src="/logo.png" alt="Lost & Found Logo" className="w-16 h-16 object-contain" />
+              </div>
               <h1 className="text-3xl font-bold mb-2">Welcome Back</h1>
               <p className="text-foreground/60">
                 Sign in to your Lost & Found account

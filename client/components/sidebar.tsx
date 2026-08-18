@@ -60,9 +60,7 @@ export function Sidebar({ items, title }: SidebarProps) {
         <div className="p-6 space-y-8">
           {/* Logo/Title */}
           <div className="flex items-center gap-3 py-2 border-b border-white/10 mb-6">
-            <div className="w-10 h-10 rounded-lg bg-gradient-to-r from-[#004b87] to-[#16a34a] flex items-center justify-center text-white font-bold text-xl select-none">
-              ✦
-            </div>
+            <img src="/logo.png" alt="Lost & Found Logo" className="w-10 h-10 object-contain select-none" />
             <div className="flex flex-col select-none">
               <span className="text-[17px] font-bold tracking-wide text-white leading-tight">Lost & Found</span>
               <span className="text-[10px] text-slate-300 font-medium tracking-wider uppercase leading-none">Management</span>
