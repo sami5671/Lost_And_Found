@@ -152,10 +152,13 @@ export default function ReportLostItemPage() {
       const res = await handleReportLostItem(fd)
       if (res.status) {
         setSuccess(true)
-        setTimeout(() => {
-          setIsLoading(true)
-          router.push('/dashboard')
-        }, 2000)
+        if (typeof window !== 'undefined') {
+          if (res.data) {
+            sessionStorage.setItem('just_reported_item', JSON.stringify(res.data))
+          }
+          sessionStorage.setItem('ai_match_modal_force', 'true')
+          window.dispatchEvent(new Event('check_ai_matches'))
+        }
       } else {
         setError(res.error || 'Failed to submit report. Please try again.')
       }

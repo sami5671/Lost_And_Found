@@ -151,14 +151,63 @@ const getAllItems = async (req, res, next) => {
 
 const getAdminStats = async (req, res, next) => {
   try {
+    const Match = require("../models/matches");
     const totalLostItems = await Item.countDocuments({ type: "lost" });
     const totalFoundItems = await Item.countDocuments({ type: "found" });
-    const totalMatches = await Item.countDocuments({ type: "lost", status: "matched" });
-    const itemsRecovered = await Item.countDocuments({ type: "lost", status: "resolved" });
-    const activeUsers = await User.countDocuments();
-    const totalItems = totalLostItems + totalFoundItems;
+    const totalItemsInDb = await Item.countDocuments({});
+    const totalItems = totalItemsInDb > 0 ? totalItemsInDb : (totalLostItems + totalFoundItems);
 
-    const successRate = totalItems > 0 ? Math.round((itemsRecovered / totalItems) * 100) : 0;
+    const totalMatches = await Item.countDocuments({ status: "matched" });
+    const matchCollPending = await Match.countDocuments({ status: { $in: ["pending", "claimed"] } });
+    const pendingMatches = Math.max(totalMatches, matchCollPending);
+
+    const itemsRecovered = await Item.countDocuments({ status: "resolved" });
+    const matchCollVerified = await Match.countDocuments({ status: "verified" });
+    const verifiedItems = Math.max(itemsRecovered, matchCollVerified);
+
+    const activeUsers = await User.countDocuments();
+
+    const successRate = totalItems > 0 ? Math.round((verifiedItems / totalItems) * 100) : 0;
+
+    // Aggregate monthly trends for the past 6 months using real database records
+    const monthlyData = [];
+    const now = new Date();
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const mLabel = monthNames[d.getMonth()];
+      const startOfMonth = new Date(d.getFullYear(), d.getMonth(), 1);
+      const endOfMonth = new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59, 999);
+
+      const lostCount = await Item.countDocuments({ type: "lost", createdAt: { $gte: startOfMonth, $lte: endOfMonth } });
+      const foundCount = await Item.countDocuments({ type: "found", createdAt: { $gte: startOfMonth, $lte: endOfMonth } });
+      const matchesCount = await Item.countDocuments({ status: "matched", updatedAt: { $gte: startOfMonth, $lte: endOfMonth } });
+      const recoveredCount = await Item.countDocuments({ status: "resolved", updatedAt: { $gte: startOfMonth, $lte: endOfMonth } });
+
+      const monthTotal = lostCount + foundCount;
+      // Real rate aligned with real MongoDB documents
+      const rate = monthTotal > 0 
+        ? Math.round((recoveredCount / monthTotal) * 100) 
+        : (i === 0 ? successRate : 0);
+
+      monthlyData.push({
+        month: mLabel,
+        lost: lostCount,
+        found: foundCount,
+        matches: matchesCount,
+        recovered: recoveredCount,
+        rate,
+      });
+    }
+
+    // Aggregate category breakdown
+    const categoryAgg = await Item.aggregate([
+      { $group: { _id: "$category", count: { $sum: 1 } } }
+    ]);
+    const categoryData = categoryAgg.map(c => ({
+      category: c._id || 'Others',
+      count: c.count
+    }));
 
     // Fetch the 5 most recent users and 5 most recent items to synthesize logs
     const recentUsers = await User.find({}).sort({ createdAt: -1 }).limit(5);
@@ -206,12 +255,17 @@ const getAdminStats = async (req, res, next) => {
       .slice(0, 5);
 
     return apiResponse(res, 200, true, "Admin stats fetched successfully!", {
+      totalItems,
       totalLostItems,
       totalFoundItems,
       totalMatches,
-      itemsRecovered,
+      pendingMatches,
+      itemsRecovered: verifiedItems,
+      verifiedItems,
       activeUsers,
       successRate,
+      monthlyData,
+      categoryData,
       recentLogs,
     });
   } catch (error) {
@@ -263,8 +317,9 @@ const approveMatch = async (req, res, next) => {
   try {
     const { id } = req.params;
     const Match = require("../models/matches");
+    const { sendHandoverSuccessNotification } = require("../helpers/emailService");
     
-    const match = await Match.findById(id);
+    const match = await Match.findById(id).populate("lostItemId foundItemId");
     if (!match) {
       return apiResponse(res, 404, false, "Match not found!");
     }
@@ -272,10 +327,36 @@ const approveMatch = async (req, res, next) => {
     match.status = "verified";
     await match.save();
 
+    const lostId = match.lostItemId?._id || match.lostItemId;
+    const foundId = match.foundItemId?._id || match.foundItemId;
+
     await Item.updateMany(
-      { _id: { $in: [match.lostItemId, match.foundItemId] } },
+      { _id: { $in: [lostId, foundId] } },
       { status: "resolved" }
     );
+
+    // Trigger handover success email notifications
+    try {
+      const lostOwnerId = typeof match.lostItemId?.reportedBy === 'object' ? match.lostItemId?.reportedBy?._id : match.lostItemId?.reportedBy;
+      const foundOwnerId = typeof match.foundItemId?.reportedBy === 'object' ? match.foundItemId?.reportedBy?._id : match.foundItemId?.reportedBy;
+
+      const lostOwner = lostOwnerId ? await User.findById(lostOwnerId) : null;
+      const foundOwner = foundOwnerId ? await User.findById(foundOwnerId) : null;
+
+      const lostTitle = match.lostItemId?.title || "Lost Item";
+      const foundTitle = match.foundItemId?.title || "Found Item";
+
+      if (lostOwner && lostOwner.email) {
+        sendHandoverSuccessNotification(lostOwner.email, lostOwner.name || "User", lostTitle, foundTitle)
+          .catch(err => console.error("Handover email error (lost owner):", err));
+      }
+      if (foundOwner && foundOwner.email && (!lostOwner || String(foundOwner._id) !== String(lostOwner._id))) {
+        sendHandoverSuccessNotification(foundOwner.email, foundOwner.name || "User", lostTitle, foundTitle)
+          .catch(err => console.error("Handover email error (found owner):", err));
+      }
+    } catch (emailErr) {
+      console.error("Error triggering handover success emails:", emailErr);
+    }
 
     return apiResponse(res, 200, true, "Match successfully verified and items resolved!", match);
   } catch (error) {

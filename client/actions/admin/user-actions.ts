@@ -75,3 +75,28 @@ export async function handleDeleteUser(userId: string) {
   }
 }
 
+export async function handlePurgeUserData(userId: string) {
+  try {
+    const res = await apiClient(`/users/${userId}/purge`, {
+      method: "DELETE",
+    });
+
+    if (!res?.status) {
+      return {
+        status: false,
+        error: res?.message || "Failed to purge user data",
+      };
+    }
+
+    return {
+      status: true,
+      data: res.data,
+      message: res?.message || "All user data, items, matches, and images permanently purged!",
+    };
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred!";
+    return { status: false, error: errorMessage };
+  }
+}
+
+

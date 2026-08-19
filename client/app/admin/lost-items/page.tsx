@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react'
 import { DashboardLayout } from '@/components/dashboard-layout'
 import { GlassCard } from '@/components/glass-card'
-import { Users, Package, AlertCircle, CheckCircle2, TrendingUp, BarChart3, Search, User } from 'lucide-react'
+import { Users, Package, AlertCircle, CheckCircle2, TrendingUp, BarChart3, Search, User, ShieldAlert } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { handleGetAllItems } from '@/actions/admin/item-actions'
 import { Item as FrontendItem, ItemCategory, ItemStatus } from '@/types'
@@ -19,6 +19,7 @@ export default function AdminLostItemsPage() {
     { label: 'Lost Items', href: '/admin/lost-items', icon: <Package className="w-5 h-5" /> },
     { label: 'Found Items', href: '/admin/found-items', icon: <CheckCircle2 className="w-5 h-5" /> },
     { label: 'Matches', href: '/admin/matches', icon: <AlertCircle className="w-5 h-5" /> },
+    { label: 'Fraud User Reduction', href: '/admin/fraud-reduction', icon: <ShieldAlert className="w-5 h-5" /> },
     { label: 'Reports', href: '/admin/reports', icon: <TrendingUp className="w-5 h-5" /> },
     { label: 'Profile', href: '/admin/profile', icon: <User className="w-5 h-5" /> },
   ]

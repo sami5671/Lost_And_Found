@@ -25,7 +25,8 @@ import {
   MapPin,
   IdCard,
   GraduationCap,
-  Heart
+  Heart,
+  ShieldAlert
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { handleGetAllUsers, handleUpdateUser, handleDeleteUser } from '@/actions/admin/user-actions'
@@ -37,6 +38,7 @@ export default function AdminUsersPage() {
     { label: 'Lost Items', href: '/admin/lost-items', icon: <Package className="w-5 h-5" /> },
     { label: 'Found Items', href: '/admin/found-items', icon: <CheckCircle2 className="w-5 h-5" /> },
     { label: 'Matches', href: '/admin/matches', icon: <AlertCircle className="w-5 h-5" /> },
+    { label: 'Fraud User Reduction', href: '/admin/fraud-reduction', icon: <ShieldAlert className="w-5 h-5" /> },
     { label: 'Reports', href: '/admin/reports', icon: <TrendingUp className="w-5 h-5" /> },
     { label: 'Profile', href: '/admin/profile', icon: <UserIcon className="w-5 h-5" /> },
   ]

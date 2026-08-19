@@ -8,7 +8,7 @@ import { DashboardLayout } from '@/components/dashboard-layout'
 import { GlassCard } from '@/components/glass-card'
 import { GradientButton } from '@/components/gradient-button'
 import { FormInput } from '@/components/form-input'
-import { BarChart3, Users, Package, AlertCircle, CheckCircle2, TrendingUp, X, Upload, Mic, MicOff, Sparkles, User } from 'lucide-react'
+import { BarChart3, Users, Package, AlertCircle, CheckCircle2, TrendingUp, X, Upload, Mic, MicOff, Sparkles, User, ShieldAlert } from 'lucide-react'
 import { handleReportFoundItem } from '@/actions/admin/item-actions'
 import { CATEGORY_OPTIONS } from '@/config/categories'
 
@@ -21,6 +21,7 @@ export default function AdminAddFoundItemPage() {
     { label: 'Lost Items', href: '/admin/lost-items', icon: <Package className="w-5 h-5" /> },
     { label: 'Found Items', href: '/admin/found-items', icon: <CheckCircle2 className="w-5 h-5" /> },
     { label: 'Matches', href: '/admin/matches', icon: <AlertCircle className="w-5 h-5" /> },
+    { label: 'Fraud User Reduction', href: '/admin/fraud-reduction', icon: <ShieldAlert className="w-5 h-5" /> },
     { label: 'Reports', href: '/admin/reports', icon: <TrendingUp className="w-5 h-5" /> },
     { label: 'Profile', href: '/admin/profile', icon: <User className="w-5 h-5" /> },
   ]

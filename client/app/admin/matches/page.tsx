@@ -17,7 +17,8 @@ import {
   User, 
   Mail, 
   Phone,
-  Sparkles
+  Sparkles,
+  ShieldAlert
 } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { handleGetMatches, handleApproveMatch, handleDismissMatch } from '@/actions/admin/match-actions'
@@ -29,6 +30,7 @@ export default function AdminMatchesPage() {
     { label: 'Lost Items', href: '/admin/lost-items', icon: <Package className="w-5 h-5" /> },
     { label: 'Found Items', href: '/admin/found-items', icon: <CheckCircle2 className="w-5 h-5" /> },
     { label: 'Matches', href: '/admin/matches', icon: <AlertCircle className="w-5 h-5" /> },
+    { label: 'Fraud User Reduction', href: '/admin/fraud-reduction', icon: <ShieldAlert className="w-5 h-5" /> },
     { label: 'Reports', href: '/admin/reports', icon: <TrendingUp className="w-5 h-5" /> },
     { label: 'Profile', href: '/admin/profile', icon: <User className="w-5 h-5" /> },
   ]
@@ -56,7 +58,10 @@ export default function AdminMatchesPage() {
     try {
       const res = await handleApproveMatch(matchId)
       if (res.status) {
-        setMatches(prev => prev.map(m => m._id === matchId ? { ...m, status: 'verified' } : m))
+        setMatches(prev => prev.map(m => (m._id === matchId || m.id === matchId) ? { ...m, status: 'verified' } : m))
+        alert('Match verified successfully! The item is now marked as a Verified Match, and automated handover notification email has been sent.')
+      } else {
+        alert(res.error || 'Failed to verify match.')
       }
     } catch (err) {
       console.error('Failed to verify match:', err)

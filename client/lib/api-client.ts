@@ -24,7 +24,10 @@ async function apiClient<TResponse = any, TBody = undefined>(
     // Read token from cookies
     try {
       const cookieStore = await cookies();
-      token = cookieStore.get("admin_token")?.value;
+      token =
+        cookieStore.get("admin_token")?.value ||
+        cookieStore.get("token")?.value ||
+        cookieStore.get("user_token")?.value;
     } catch (e) {
       console.warn("Cookies not available in this context:", e);
     }

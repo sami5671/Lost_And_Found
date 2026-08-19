@@ -228,10 +228,17 @@ const getAllUsers = async (req, res, next) => {
 
     const users = await User.find({}).sort({ createdAt: -1 });
     const Item = require("../models/items");
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
     const usersWithItemCount = await Promise.all(
       users.map(async (user) => {
         const itemCount = await Item.countDocuments({ reportedBy: user._id });
+        const monthlyItemCount = await Item.countDocuments({
+          reportedBy: user._id,
+          createdAt: { $gte: startOfMonth },
+        });
+
         return {
           id: user._id,
           fullName: user.fullName,
@@ -244,6 +251,7 @@ const getAllUsers = async (req, res, next) => {
           address: user.address,
           avatar: user.avatar,
           items: itemCount,
+          monthlyItems: monthlyItemCount,
           status: user.status || "Active",
           createdAt: user.createdAt,
         };
@@ -540,6 +548,65 @@ const deleteUserByAdmin = async (req, res, next) => {
   }
 };
 
+const purgeUserDataByAdmin = async (req, res, next) => {
+  try {
+    const requesterRole = req.decoded?.role;
+    if (requesterRole !== "admin") {
+      return apiResponse(res, 403, false, "Forbidden: Admin access required");
+    }
+
+    const { id } = req.params;
+    const Item = require("../models/items");
+    const Match = require("../models/matches");
+    const { deleteFromCloudinary } = require("../helpers/cloudinaryHelper");
+
+    const user = await User.findById(id);
+    if (!user) {
+      return apiResponse(res, 404, false, "User not found");
+    }
+
+    // 1. Find all items reported by this user
+    const userItems = await Item.find({ reportedBy: id });
+    const userItemIds = userItems.map(item => item._id);
+
+    // 2. Collect Cloudinary image URLs for uploaded items ONLY (user registration avatar and ID cards are preserved)
+    const imageUrlsToDelete = [];
+
+    userItems.forEach(item => {
+      if (Array.isArray(item.images)) {
+        item.images.forEach(img => {
+          if (img) imageUrlsToDelete.push(img);
+        });
+      }
+    });
+
+    // Delete item images from Cloudinary in parallel
+    await Promise.all(imageUrlsToDelete.map(url => deleteFromCloudinary(url)));
+
+    // 3. Delete all matches associated with the user's items or claimed by this user
+    await Match.deleteMany({
+      $or: [
+        { lostItemId: { $in: userItemIds } },
+        { foundItemId: { $in: userItemIds } },
+        { claimedBy: id }
+      ]
+    });
+
+    // 4. Delete all items reported by this user from MongoDB
+    await Item.deleteMany({ reportedBy: id });
+
+    // Note: User registration profile data in MongoDB is preserved (not deleted).
+
+    return apiResponse(res, 200, true, `All reported items, matches, and item images for ${user.fullName || user.email} have been deleted. User account remains registered in the system.`, {
+      userId: id,
+      deletedItemsCount: userItems.length,
+      deletedImagesCount: imageUrlsToDelete.length,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   register,
   login,
@@ -551,5 +618,7 @@ module.exports = {
   resetPassword,
   updateUserByAdmin,
   deleteUserByAdmin,
+  purgeUserDataByAdmin,
 };
+
 

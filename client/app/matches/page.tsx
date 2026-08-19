@@ -184,7 +184,7 @@ export default function StudentMatchesPage() {
                             : 'bg-yellow-500/20 text-yellow-700 dark:text-yellow-300 border border-yellow-500/30'
                         }`}>
                           {match.status === 'verified'
-                            ? 'Verified Match'
+                            ? 'Handover Complete (Verified)'
                             : match.status === 'claimed'
                             ? 'Claimed (Under Review)'
                             : match.status === 'pending'
@@ -243,9 +243,18 @@ export default function StudentMatchesPage() {
                         })()}
 
                         {match.status === 'verified' && (
-                          <p className="text-[10px] text-green-600 dark:text-green-400 text-center lg:text-right font-medium leading-tight">
-                            Claim verified! Visit office to complete handover.
-                          </p>
+                          <div className="p-3.5 rounded-2xl bg-gradient-to-br from-emerald-500/15 via-sky-500/10 to-blue-500/15 border border-emerald-500/30 space-y-1.5 text-center lg:text-right w-full shadow-sm">
+                            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-300 font-extrabold text-xs">
+                              <CheckCircle2 className="w-3.5 h-3.5" />
+                              <span>Handover Successful!</span>
+                            </div>
+                            <p className="text-xs text-slate-700 dark:text-slate-200 font-bold leading-tight">
+                              🎉 Item handover verified & completed by administration.
+                            </p>
+                            <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium block">
+                              📧 Confirmation email sent to your registered address
+                            </span>
+                          </div>
                         )}
                       </div>
                     </div>

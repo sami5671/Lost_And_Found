@@ -6,7 +6,7 @@ import { DashboardLayout } from '@/components/dashboard-layout'
 import { GlassCard } from '@/components/glass-card'
 import { GradientButton } from '@/components/gradient-button'
 import { ItemCard } from '@/components/item-card'
-import { Users, Package, AlertCircle, CheckCircle2, TrendingUp, Plus, BarChart3, Settings, User } from 'lucide-react'
+import { Users, Package, AlertCircle, CheckCircle2, TrendingUp, Plus, BarChart3, Settings, User, ShieldAlert } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { handleGetAdminStats, handleGetAllItems } from '@/actions/admin/item-actions'
 import { Item as FrontendItem, ItemCategory, ItemStatus } from '@/types'
@@ -18,6 +18,7 @@ export default function AdminDashboard() {
     { label: 'Lost Items', href: '/admin/lost-items', icon: <Package className="w-5 h-5" /> },
     { label: 'Found Items', href: '/admin/found-items', icon: <CheckCircle2 className="w-5 h-5" /> },
     { label: 'Matches', href: '/admin/matches', icon: <AlertCircle className="w-5 h-5" /> },
+    { label: 'Fraud User Reduction', href: '/admin/fraud-reduction', icon: <ShieldAlert className="w-5 h-5" /> },
     { label: 'Reports', href: '/admin/reports', icon: <TrendingUp className="w-5 h-5" /> },
     { label: 'Profile', href: '/admin/profile', icon: <User className="w-5 h-5" /> },
   ]
@@ -41,7 +42,14 @@ export default function AdminDashboard() {
         ])
 
         if (statsRes.status && statsRes.data) {
-          setStats(statsRes.data)
+          const d = statsRes.data
+          setStats({
+            totalItems: d.totalItems ?? ((d.totalLostItems || 0) + (d.totalFoundItems || 0)),
+            pendingMatches: d.pendingMatches ?? d.totalMatches ?? 0,
+            verifiedItems: d.verifiedItems ?? d.itemsRecovered ?? 0,
+            activeUsers: d.activeUsers ?? 0,
+            successRate: d.successRate ?? 0,
+          })
         }
 
         if (itemsRes.status && itemsRes.data) {

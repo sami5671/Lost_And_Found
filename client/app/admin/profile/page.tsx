@@ -1,33 +1,34 @@
 'use client'
 
-import React, { useState, useEffect, useRef } from 'react'
+import { updateProfileAction } from '@/actions/admin/auth-actions'
+import { handleGetAdminStats, handleGetGlobalStats } from '@/actions/admin/item-actions'
 import { DashboardLayout } from '@/components/dashboard-layout'
 import { GlassCard } from '@/components/glass-card'
 import { GradientButton } from '@/components/gradient-button'
 import { useAuth } from '@/lib/auth-context'
-import { 
-  Bell, 
-  CheckCircle2, 
-  Plus, 
-  BarChart3, 
-  Edit3, 
-  CreditCard,
-  X,
-  Save,
-  User as UserIcon,
-  Check,
-  Camera,
-  MapPin,
-  Upload,
-  Shield,
-  Users,
-  Package,
+import {
   AlertCircle,
+  Award,
+  BarChart3,
+  Bell,
+  Camera,
+  Check,
+  CheckCircle2,
+  CreditCard,
+  Edit3,
+  MapPin,
+  Package,
+  RefreshCw,
+  Save,
+  Shield,
   TrendingUp,
-  Award
+  Upload,
+  User as UserIcon,
+  Users,
+  X,
+  ShieldAlert
 } from 'lucide-react'
-import { handleGetAdminStats } from '@/actions/admin/item-actions'
-import { updateProfileAction } from '@/actions/admin/auth-actions'
+import React, { useEffect, useRef, useState } from 'react'
 
 export default function AdminProfilePage() {
   const { user, updateUser } = useAuth()
@@ -94,24 +95,44 @@ export default function AdminProfilePage() {
     { label: 'Lost Items', href: '/admin/lost-items', icon: <Package className="w-5 h-5" /> },
     { label: 'Found Items', href: '/admin/found-items', icon: <CheckCircle2 className="w-5 h-5" /> },
     { label: 'Matches', href: '/admin/matches', icon: <AlertCircle className="w-5 h-5" /> },
+    { label: 'Fraud User Reduction', href: '/admin/fraud-reduction', icon: <ShieldAlert className="w-5 h-5" /> },
     { label: 'Reports', href: '/admin/reports', icon: <TrendingUp className="w-5 h-5" /> },
     { label: 'Profile', href: '/admin/profile', icon: <UserIcon className="w-5 h-5" /> },
   ]
 
-  useEffect(() => {
-    async function loadStats() {
-      try {
-        const res = await handleGetAdminStats()
-        if (res.status && res.data) {
-          setStats(res.data)
+  const loadStats = async () => {
+    try {
+      let res = await handleGetAdminStats()
+      if (!res.status || !res.data) {
+        const globalRes = await handleGetGlobalStats()
+        if (globalRes.status && globalRes.data) {
+          res = globalRes
         }
-      } catch (err) {
-        console.error('Failed to load admin stats for profile:', err)
-      } finally {
-        setLoading(false)
       }
+
+      if (res?.data) {
+        const d = res.data
+        setStats({
+          totalItems: d.totalItems ?? ((d.totalLostItems || 0) + (d.totalFoundItems || 0)),
+          pendingMatches: d.pendingMatches ?? d.totalMatches ?? 0,
+          verifiedItems: d.verifiedItems ?? d.itemsRecovered ?? 0,
+          activeUsers: d.activeUsers ?? d.registeredUsers ?? 0,
+          successRate: d.successRate ?? 0,
+        })
+      }
+    } catch (err) {
+      console.error('Failed to load admin stats for profile:', err)
+    } finally {
+      setLoading(false)
     }
+  }
+
+  useEffect(() => {
     loadStats()
+    const interval = setInterval(() => {
+      loadStats()
+    }, 15000)
+    return () => clearInterval(interval)
   }, [])
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -837,11 +858,26 @@ export default function AdminProfilePage() {
         {/* Secondary Row: System Activity Overview & Admin Notification Preferences */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <GlassCard className="p-6">
-            <h3 className="font-bold text-lg mb-4 text-slate-900 dark:text-white flex items-center gap-2">
-              <BarChart3 className="w-5 h-5 text-primary" />
-              System Activity Overview
-            </h3>
-            {loading ? (
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-bold text-lg text-slate-900 dark:text-white flex items-center gap-2">
+                <BarChart3 className="w-5 h-5 text-primary" />
+                System Activity Overview
+              </h3>
+              <button
+                type="button"
+                onClick={() => {
+                  setLoading(true)
+                  loadStats()
+                }}
+                disabled={loading}
+                className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-all cursor-pointer disabled:opacity-50"
+                title="Sync Live Data from Server"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
+                <span>{loading ? 'Syncing...' : 'Sync Data'}</span>
+              </button>
+            </div>
+            {loading && stats.totalItems === 0 ? (
               <div className="flex items-center justify-center py-8">
                 <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-primary"></div>
               </div>
